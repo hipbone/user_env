@@ -1,0 +1,64 @@
+alias hssh='ssh -l hipbone 112.175.46.203 -p 443'
+alias dssh='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no'
+alias chefssh='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no chefw-server-01.com2us.kr'
+alias vmanage='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no vsphere-manage-01.com2us.kr'
+alias dns='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 119.205.200.201'
+alias mount_io='mount_smbfs //hipbone@172.18.99.21/io ~/io'
+alias f_server='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 172.18.99.21'
+alias chef_recipe="chef generate recipe -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+alias chef_cookbook="chef generate cookbook -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+alias chef_attr="chef generate attribute -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+alias chef_template="chef generate template -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+alias chef_file="chef generate file -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+alias chef_resource="chef generate resource -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+alias dcsshX="csshX -l dbcnqnfrksmd --hosts"
+alias sre_cookbook="chef generate cookbook -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_recipe="chef generate recipe -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_attr="chef generate attribute -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_template="chef generate template -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_file="chef generate file -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_resource="chef generate resource -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+
+# performance
+alias pcurl='curl -o /dev/null -w "http_code: %{http_code} \ntotal_time : %{time_total} \ndns_lookup : %{time_namelookup} \nappconnect_time : %{time_appconnect} \n"'
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/hipbone/Downloads/google-cloud-sdk/path.bash.inc' ]; then source '/Users/hipbone/Downloads/google-cloud-sdk/path.bash.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/hipbone/Downloads/google-cloud-sdk/completion.bash.inc' ]; then source '/Users/hipbone/Downloads/google-cloud-sdk/completion.bash.inc'; fi
+
+# promt
+PS1='\u@\h :\w]\\$ '
+
+# pyenv
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+# autoenv
+source $(brew --prefix autoenv)/activate.sh
+
+export CLICOLOR=1
+
+# chef dk
+eval "$(chef shell-init bash)"
+export PATH=/Users/hipbone/git_repo/chef-repo/bin:$PATH
+
+# chef script
+export PATH=/Users/hipbone/git_repo/script/chef:$PATH
+# added by Miniconda3 4.5.12 installer
+# >>> conda init >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$(CONDA_REPORT_ERRORS=false '/miniconda3/bin/conda' shell.bash hook 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    \eval "$__conda_setup"
+else
+    if [ -f "/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/miniconda3/etc/profile.d/conda.sh"
+        CONDA_CHANGEPS1=false conda activate base
+    else
+        \export PATH="/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda init <<<
