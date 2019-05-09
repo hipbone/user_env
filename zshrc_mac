@@ -107,6 +107,7 @@ source $ZSH/oh-my-zsh.sh
 autoload -U promptinit; promptinit
 prompt pure
 
+### alias
 alias hssh='ssh -l hipbone 112.175.46.203 -p 443'
 alias dssh='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no'
 alias chefssh='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no chefw-server-01.com2us.kr'
@@ -114,13 +115,24 @@ alias vmanage='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no vsphere-manage-01
 alias dns='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 119.205.200.201'
 alias mount_io='mount_smbfs //hipbone@172.18.99.21/io ~/io'
 alias f_server='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 172.18.99.21'
+
+# 시스템팀 Chef 관리용
 alias chef_recipe="chef generate recipe -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
 alias chef_cookbook="chef generate cookbook -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
 alias chef_attr="chef generate attribute -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
 alias chef_template="chef generate template -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
 alias chef_file="chef generate file -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-alias chef_app="chef generate app -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks'"
 alias chef_resource="chef generate resource -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
+
+# SRE Chef 관리용
+alias sre_cookbook="chef generate cookbook -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_recipe="chef generate recipe -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_attr="chef generate attribute -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_template="chef generate template -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_file="chef generate file -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_resource="chef generate resource -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+alias sre_policyfile="chef generate policyfile -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
+
 alias dcsshX="csshX -l dbcnqnfrksmd --hosts"
 
 # performance
@@ -139,6 +151,9 @@ export CLICOLOR=1
 # eval "$(chef shell-init bash)"
 eval "$(chef shell-init zsh)"
 export PATH=/Users/hipbone/git_repo/chef-repo/bin:$PATH
+
+# 신규 Chef
+export PATH=/Users/hipbone/git_repo/chef/bin:$PATH
 
 # chef script
 export PATH=/Users/hipbone/git_repo/script/chef:$PATH
