@@ -44,6 +44,9 @@ export CLICOLOR=1
 eval "$(chef shell-init bash)"
 export PATH=/Users/hipbone/git_repo/chef-repo/bin:$PATH
 
+# 신규 Chef
+export PATH=/Users/hipbone/git_repo/chef/bin:$PATH
+
 # chef script
 export PATH=/Users/hipbone/git_repo/script/chef:$PATH
 # added by Miniconda3 4.5.12 installer
