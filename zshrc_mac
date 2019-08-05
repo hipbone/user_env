@@ -111,7 +111,6 @@ prompt pure
 alias hssh='ssh -l hipbone 112.175.46.203 -p 443'
 alias dssh='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no'
 alias chefssh='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no chefw-server-01.com2us.kr'
-alias vmanage='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no vsphere-manage-01.com2us.kr'
 alias dns='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 119.205.200.201'
 alias mount_io='mount_smbfs //hipbone@172.18.99.21/io ~/io'
 alias f_server='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 172.18.99.21'
@@ -133,10 +132,13 @@ alias sre_file="chef generate file -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -
 alias sre_resource="chef generate resource -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
 alias sre_policyfile="chef generate policyfile -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
 
-alias dcsshX="csshX -l dbcnqnfrksmd --hosts"
+alias dcsshX="csshX --screen 1-2 -l dbcnqnfrksmd --hosts"
 
 # performance
 alias pcurl='curl -o /dev/null -w "http_code: %{http_code} \ntotal_time : %{time_total} \ndns_lookup : %{time_namelookup} \nappconnect_time : %{time_appconnect} \n"'
+
+# git 
+alias gdiff='git diff --color | diff-so-fancy'
 
 # pyenv
 eval "$(pyenv init -)"
