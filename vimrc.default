@@ -1,0 +1,50 @@
+set nocompatible	" be improved, required
+filetype off		" required
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" Vundle 관리, required
+Plugin 'VundleVim/Vundle.vim' 
+
+Plugin 'tpope/vim-fugitive' "required
+Plugin 'tpope/vim-sensible'
+" neosnippet - 시스템 버퍼에 있는 키워드를 완성해준다.
+Plugin 'Shougo/neocomplete'
+Plugin 'Shougo/neosnippet'
+Plugin 'Shougo/neosnippet-snippets'
+" Python을 위한 자동완성 플러그인
+" jedi 파이썬 라이브러리 설치 필요 : pip install jedi
+Plugin 'davidhalter/jedi-vim'
+" Syntastic - Python 문법 체크 (pip install pycodestyle autopep8)
+Plugin 'Syntastic'
+" Plugin 'scrooloose/nerdtree'
+" Plugin 'scrooloose/syntastic'
+" Plugin 'scrooloose/nerdcommenter'
+" Plugin 'Shougo/neocomplcache.vim'
+" Plugin 'nathanaelkane/vim-indent-guides'
+
+" 모든 플러그인은 윗라인 안에 작성한다.
+call vundle#end()	  " required
+filetype plugin indent on " 파일 들여쓰기 무시, required
+
+" 도움말
+" :PluginList		- 구성된 플러그인 목록
+" :PluginInstall	- 플러그인 설치; '!'를 추가하여 업데이트 가능
+" :PluginUpdate		- 플러그인 업데이트
+" :PluginSearch foo 	- foo 플러그인 검색,'!'를 추가해서 local cache 새로고침
+" :PluginClean		- 사용하지 않는 플러그인 제거를 확인
+" 			- '!' 추가하여 자동 승인 제거
+" 자세한 내용은 :h vundle을 참조하거나 FAQ는 wiki를 참조
+" 이 줄 뒤에는 플러그인이 아닌것을 추가
+
+" Syntastic setting
+let g:symntastic_python_checkers = ['pycodestyle']
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+set tabstop=4
+set shiftwidth=4
+set expandtab
