@@ -28,6 +28,9 @@ case ${OS} in
     # fzf install for zsh-interactive-cd
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
     ~/.fzf/install
+
+    # default .zshrc 복사
+    cp ~/user_env/zshrc_centos ~/.zshrc
     ;;
   Darwin)
     # plugin install
