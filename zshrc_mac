@@ -115,14 +115,6 @@ alias dns='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 119.205.200.201'
 alias mount_io='mount_smbfs //hipbone@172.18.99.21/io ~/io'
 alias f_server='ssh -l dbcnqnfrksmd -o StrictHostKeyChecking=no 172.18.99.21'
 
-# 시스템팀 Chef 관리용
-alias chef_recipe="chef generate recipe -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-alias chef_cookbook="chef generate cookbook -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-alias chef_attr="chef generate attribute -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-alias chef_template="chef generate template -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-alias chef_file="chef generate file -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-alias chef_resource="chef generate resource -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef-repo/cookbooks/skeletons'"
-
 # SRE Chef 관리용
 alias sre_cookbook="chef generate cookbook -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
 alias sre_recipe="chef generate recipe -m 'hipbone@gamevilcom2us.com' -C 'hipbone' -g '/Users/hipbone/git_repo/chef/cookbooks/skeletons'"
