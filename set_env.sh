@@ -18,6 +18,7 @@ function set_zsh_for_linux() {
   echo ''  
 }
 
+# OS, VER 정보 가져오기
 get_os
 
 case ${OS} in 
