@@ -1,4 +1,16 @@
-# Vim 세팅
+# PC Setting
+
+## MacBook
+
+### 초기 세팅
+
+``` bash
+bash setting_mac.sh
+```
+
+## Linux
+
+## Vim 세팅
 
 ## Example
 
