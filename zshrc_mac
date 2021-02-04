@@ -25,3 +25,7 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 test $(which bat) && alias cat="bat"
+
+# ls color
+export CLICOLOR=1
+LSCOLORS=Gxfxcxdxbxegedabagacad

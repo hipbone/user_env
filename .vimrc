@@ -10,6 +10,7 @@ Plugin 'scrooloose/syntastic'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'Shougo/neocomplcache.vim'
 Plugin 'nathanaelkane/vim-indent-guides'
+Plugin 'altercation/vim-colors-solarized'
 Plugin 'ctags.vim'
 call vundle#end()            
 filetype plugin indent on " Put your non-Plugin stuff after this line
@@ -19,3 +20,4 @@ let NERDTreeShowHidden=1
 set tabstop=4
 set shiftwidth=4
 set expandtab
+set background=dark
