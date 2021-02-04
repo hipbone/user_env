@@ -46,6 +46,13 @@ function install_zsh_plugin() {
     test $(which bat) || brew install bat
 }
 
+function set_link() {
+    ln -fs ${PWD}/zshrc_mac ${HOME}/.zshrc
+    ln -fs ${PWD}/.vimrc ${HOME}/.vimrc
+    test ! -L ${HOME}/.vim && test -d ${HOME}/.vim && mv ${HOME}/.vim{,.dist}
+    ln -fs ${PWD}/.vim ${HOME}/.vim
+}
+
 ### main
 ## zsh install and update
 zsh_update
@@ -53,5 +60,5 @@ zsh_update
 install_oh-my-zsh
 install_zsh_theme
 install_zsh_plugin
-cp -f zshrc_mac ${HOME}/.zshrc
+set_link
 source ${HOME}/.zshrc
