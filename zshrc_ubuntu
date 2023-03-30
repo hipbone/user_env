@@ -16,6 +16,9 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
+# environment variables
+source "${HOME}/.env_vars"
+
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
