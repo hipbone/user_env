@@ -29,7 +29,14 @@ test -f "${HOME}/.env_vars" && source "${HOME}/.env_vars"
 # alias
 alias docker='sudo docker'
 alias apt='sudo apt'
+alias tg='terragrunt'
 
 # LANG
 # export LANG=en_US.UTF-8
 export LANG=ko_KR.UTF-8
+
+# homebrew가 설치되었을 경우 PATH 설정
+test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+# echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.zshrc
