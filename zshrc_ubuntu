@@ -25,3 +25,11 @@ test -f "${HOME}/.env_vars" && source "${HOME}/.env_vars"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# alias
+alias docker='sudo docker'
+alias apt='sudo apt'
+
+# LANG
+# export LANG=en_US.UTF-8
+export LANG=ko_KR.UTF-8
