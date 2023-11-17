@@ -27,6 +27,7 @@ test -f "${HOME}/.env_vars" && source "${HOME}/.env_vars"
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # alias
+source /etc/zsh/alias.sh
 alias docker='sudo docker'
 alias apt='sudo apt'
 alias tg='terragrunt'
