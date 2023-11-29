@@ -27,6 +27,13 @@ test -f "${HOME}/.env_vars" && source "${HOME}/.env_vars"
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # default alias
+## alias load
+if [ -d "${HOME}/alias" ];
+then
+    for file in ${HOME}/alias/*; do
+	source ${file}
+    done
+fi
 source /etc/zsh/alias.sh
 alias docker='sudo docker'
 alias apt='sudo apt'

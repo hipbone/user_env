@@ -1,0 +1,2 @@
+# 전체 인스터스 목록 가져오기
+alias ec2-servers-hive-live="aws ec2 describe-instances --query \"Reservations[*].Instances[*].Tags[?Key=='Name'].Value\" --output text --profile hive-live"

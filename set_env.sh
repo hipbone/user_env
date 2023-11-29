@@ -2,6 +2,7 @@
 
 ## Variables
 ZSH_CUSTOM="${HOME}/.oh-my-zsh/custom"
+ALIAS_DIR="${PWD}/alias"
 
 function get_os() {
   if [ -f /etc/os-release ]; then
@@ -82,5 +83,6 @@ fi
 
 # zsh symlink
 ln -fs "${ZSH_FILE}" "${HOME}"/.zshrc
+ln -fs "${ALIAS_DIR}" "${HOME}"/alias"
 
 source "${HOME}"/.zshrc

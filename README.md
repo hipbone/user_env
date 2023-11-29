@@ -50,5 +50,3 @@ bash setting_mac.sh
 ```base
 ./set_env_linux.sh
 ```
-
-
