@@ -1,0 +1,3 @@
+alias docker='sudo docker'
+alias apt='sudo apt'
+alias vim='sudo vim'

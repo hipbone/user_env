@@ -28,19 +28,21 @@ test -f "${HOME}/.env_vars" && source "${HOME}/.env_vars"
 
 # default alias
 ## alias load
-if [ -d "${HOME}/alias" ];
+if [ -d "${HOME}/alias/default" ];
 then
-    for file in ${HOME}/alias/*; do
+    for file in ${HOME}/alias/default/*; do
 	source ${file}
     done
 fi
-source /etc/zsh/alias.sh
-alias docker='sudo docker'
-alias apt='sudo apt'
-alias tg='terragrunt'
-alias vim='sudo vim'
+if [ -d "${HOME}/alias/ubuntu" ];
+then
+    for file in ${HOME}/alias/ubuntu/*; do
+	source ${file}
+    done
+fi
 
 # custom alias - /etc/zsh/alias.sh 별도로 생성해서 사용
+test -f /etc/zsh/alias.sh && source /etc/zsh/alias.sh
 
 # LANG
 # export LANG=en_US.UTF-8
