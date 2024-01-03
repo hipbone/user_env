@@ -88,6 +88,6 @@ fi
 
 # zsh symlink
 ln -fs "${ZSH_FILE}" "${HOME}"/.zshrc
-ln -fs "${ALIAS_DIR}" "${HOME}"/alias"
+ln -fs "${ALIAS_DIR}" "${HOME}"/alias
 
 source "${HOME}"/.zshrc
