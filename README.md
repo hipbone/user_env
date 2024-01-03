@@ -47,6 +47,12 @@ bash setting_mac.sh
 
 ## 리눅스 환경에서 vim 세팅
 
-```base
+```bash
 ./set_env_linux.sh
+```
+
+## 로케일 문제 시 설정 - 한글깨짐
+
+```bash
+./set_locales.sh
 ```
