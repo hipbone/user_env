@@ -4,6 +4,8 @@
 ZSH_CUSTOM="${HOME}/.oh-my-zsh/custom"
 ALIAS_DIR="${PWD}/alias"
 
+## Fuction Area ##
+### OS 정보를 가져오기
 function get_os() {
   if [ -f /etc/os-release ]; then
     . /etc/os-release
@@ -15,19 +17,22 @@ function get_os() {
   fi
 }
 
+### 개발중 - 미사용 ###
 function set_zsh_for_linux() {
   echo ''  
 }
 
-# OS, VER 정보 가져오기
-get_os
-
+### 필수 패키지 설치 
 function requirement_package() {
   $PKG_MANAGER install -y wget curl git zsh bat
 }
 
 
+### Start ###
+# OS, VER 정보 가져오기
+get_os
 
+# OS 배포판에 따라 초기 구성 및 기본 정보 가져오기 
 case ${OS} in 
   centos)
     PKG_MANAGER="sudo yum"
