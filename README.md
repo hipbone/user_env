@@ -17,6 +17,16 @@
 bash set_env.sh
 ```
 
+### 도구 통합 중...
+
+setEnv.sh CLI 툴로 통합 중이며, 별도의 인자값을 입력 받아 여러 환경을 구성
+
+```bash
+# OpenTofu 설치 및 구성
+bash setEnv.sh -e opentofu
+```
+
+
 ### 개인키와 같은 환경변수를 설정하는 방법
 
 ~/.env_vars 파일에 환경변수를 설정한다.
