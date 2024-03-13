@@ -26,7 +26,8 @@ print_help() {
   echo ""
   echo ""
   echo "지원되는 ENVIRONMENT"
-  echo "  opentofu			OpenTofu를 설치하고 구성"
+  echo "  default                       기본 환경을 구성(zsh)"
+  echo "  opentofu                      OpenTofu를 설치하고 구성"
 }
 
 ## OS 정보 가져오기
@@ -41,6 +42,43 @@ get_os() {
   fi
 }
 
+# 필수 패키지 설치
+requirement_package() {
+  $PKG_MANAGER install -y wget curl git zsh bat
+}
+
+# zsh 환경 구성
+set_zsh() {
+  ZSH_CUSTOM="${HOME}/.oh-my-zsh/custom"
+  ALIAS_DIR="${PWD}/alias"
+  # oh-my-zsh 설치
+  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+    Yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  else
+    echo "oh-my-zsh은 이미 설치되었습니다."
+  fi
+  
+  ## powerlevel10k theme 설치
+  if [ ! -d "$ZSH_CUSTOM/themes/powerlevel10k" ]; then
+      git clone https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM}/themes/powerlevel10k
+  fi
+
+  # zsh 플러그인 설치
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ];then
+      git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
+  fi
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ];then
+      git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
+  fi
+
+  # zsh symlink
+  ln -fs "${ZSH_FILE}" "${HOME}"/.zshrc
+  ln -fs "${ALIAS_DIR}" "${HOME}"/alias
+
+  # Profile 로드
+  source "${HOME}"/.zshrc
+}
+
 ## OpenTofu 설치 및 구성 
 set_opentofu() {
   echo "setting OpenTofu..."
@@ -53,8 +91,24 @@ set_opentofu() {
       ./install-opentofu.sh --install-method deb
       if [ $? -eq 0 ]
       then
-	rm -f install-opentofu.sh
+	      rm -f install-opentofu.sh
       fi
+      ;;
+    *)
+      echo "지원하지 않는 배포판입니다. : ${OS}"
+      ;;
+  esac
+}
+
+## 기본 환경 구성
+set_default() {
+  echo "기본 환경을 구성합니다..."
+  case ${OS} in
+    ubuntu)
+      PKG_MANAGER="sudo apt"
+      ZSH_FILE="${PWD}/zshrc_ubuntu"
+      requirement_package "${PKG_MANAGER}"
+      set_zsh "${ZSH_FILE}"
       ;;
     *)
       echo "지원하지 않는 배포판입니다. : ${OS}"
@@ -70,6 +124,11 @@ configure_environment() {
       # OS 정보 가져오기
       get_os
       set_opentofu "${OS}"
+      ;;
+    default)
+      echo "기본 환경을 구성하는 중입니다..."
+      get_os
+      set_default "${OS}"
       ;;
     production)
       echo "Configuring production environment..."
