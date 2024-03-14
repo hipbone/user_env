@@ -10,4 +10,4 @@ alias hive-live-aws-ec2="cd /data/src/iep-git/iep-aws-projects/hive-live/ap-nort
 alias hive-live-aws-lb="cd /data/src/iep-git/iep-aws-projects/hive-live/ap-northeast-2/live/load-balancer"
 
 # tools
-test $(which bat) && alias cat="bat"
+[ -x "$(which bat)" ] && alias cat="bat"
