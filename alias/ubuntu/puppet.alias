@@ -1,0 +1,4 @@
+# puppet 개발 서버
+alias sm='ssh -l sreemem 43.133.70.240'
+alias sa='ssh -l sreemem 43.155.138.236'
+alias sda='ssh -l dbcnqnfrksmd 43.155.138.236'
