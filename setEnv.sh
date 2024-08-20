@@ -13,7 +13,7 @@
 ## 스크립트 이름
 script_name=$(basename "$0")
 ## 임시 디렉토리
-tmp_dir="./tmp"
+tmp_dir="tmp"
 ###################### 1. 변수 선언 - End ############################
 
 ####################### 2. 함수 선언 - Start #########################
@@ -45,12 +45,26 @@ get_os() {
   fi
 }
 
+## 리눅스인지 확인하기
 is_linux() {
   if [[ "$(uname)" == "Linux" ]]; then
     exit 0
   else
     echo >&2 "Linux가 아닙니다."
   fi
+
+}
+
+## 패키지 관리자 가져오기
+get_pkgmanager() {
+  case ${OS} in
+  ubuntu)
+    PKG_MANAGER="sudo apt"
+    ;;
+  *)
+    echo "지원하지 않는 배포판입니다. : ${OS}"
+    ;;
+  esac
 
 }
 
@@ -116,9 +130,10 @@ set_awscli() {
   echo "awscli를 설치합니다..."
   mkdir $tmp_dir
   cd $tmp_dir || exit
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
   sudo ./aws/install
+  rm -rf ../$tmp_dir
 }
 
 ## 기본 환경 구성
@@ -142,13 +157,10 @@ configure_environment() {
   case "$1" in
   opentofu)
     echo "openTofu 개발 환경을 구성하는 중입니다..."
-    # OS 정보 가져오기
-    get_os
     set_opentofu "${OS}"
     ;;
   default)
     echo "기본 환경을 구성하는 중입니다..."
-    get_os
     set_default "${OS}"
     ;;
   production)
@@ -158,7 +170,7 @@ configure_environment() {
   awscli)
     echo "AWS CLI를 설치하는 중입니다..."
     # 플랫폼 확인
-    if is_linux; then
+    if $(is_linux); then
       set_awscli
     fi
     ;;
@@ -208,6 +220,11 @@ if [ -z "$environment" ]; then
   print_help
   exit 1
 fi
+
+# 공통 함수 실행
+get_os
+get_pkgmanager
+requirement_package "${PKG_MANAGER}"
 
 ## 특정 환경 구성
 configure_environment "$environment"
