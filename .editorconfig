@@ -1,0 +1,41 @@
+# .editorconfig의 최상위 파일임을 지정합니다.
+root = true
+
+# 기본 설정: 모든 파일에 적용
+[*]
+charset = utf-8                      # 파일 인코딩을 UTF-8로 설정
+indent_style = space                 # 들여쓰기를 스페이스로 설정
+indent_size = 4                      # 스페이스 4칸으로 들여쓰기
+end_of_line = lf                     # 줄바꿈을 LF (Unix 스타일)로 설정
+insert_final_newline = true          # 파일 끝에 새 줄 추가
+trim_trailing_whitespace = true      # 줄 끝의 불필요한 공백 제거
+
+# 특정 파일 확장자에 대한 설정: Shell 스크립트
+[*.sh]
+indent_style = space
+indent_size = 4                      # 스페이스 2칸으로 들여쓰기
+
+# 특정 파일 확장자에 대한 설정: Python 파일
+[*.py]
+indent_style = space
+indent_size = 4                      # Python은 일반적으로 스페이스 4칸을 사용
+
+# 특정 파일 확장자에 대한 설정: JavaScript 및 JSON 파일
+[*.js, *.json]
+indent_style = space
+indent_size = 2                      # JavaScript와 JSON은 스페이스 2칸을 선호
+
+# Markdown 파일 설정
+[*.md]
+trim_trailing_whitespace = false     # Markdown은 줄 끝의 공백을 보존
+
+# YAML 파일 설정
+[*.yml, *.yaml]
+indent_style = space
+indent_size = 2                      # YAML은 스페이스 2칸을 사용
+
+# HTML, CSS, SCSS 설정
+[*.html, *.css, *.scss]
+indent_style = space
+indent_size = 2                      # HTML/CSS는 스페이스 2칸을 선호
+

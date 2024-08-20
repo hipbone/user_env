@@ -12,6 +12,8 @@
 ###################### 1. 변수 선언 - Start ##########################
 ## 스크립트 이름
 script_name=$(basename "$0")
+## 임시 디렉토리
+tmp_dir="./tmp"
 ###################### 1. 변수 선언 - End ############################
 
 ####################### 2. 함수 선언 - Start #########################
@@ -28,6 +30,7 @@ print_help() {
   echo "지원되는 ENVIRONMENT"
   echo "  default                       기본 환경을 구성(zsh)"
   echo "  opentofu                      OpenTofu를 설치하고 구성"
+  echo "  awscli                        aws cli를 설치"
 }
 
 ## OS 정보 가져오기
@@ -42,9 +45,18 @@ get_os() {
   fi
 }
 
+is_linux() {
+  if [[ "$(uname)" == "Linux" ]]; then
+    exit 0
+  else
+    echo >&2 "Linux가 아닙니다."
+  fi
+
+}
+
 # 필수 패키지 설치
 requirement_package() {
-  $PKG_MANAGER install -y wget curl git zsh bat
+  $PKG_MANAGER install -y wget curl git zsh bat unzip
 }
 
 # zsh 환경 구성
@@ -57,18 +69,18 @@ set_zsh() {
   else
     echo "oh-my-zsh은 이미 설치되었습니다."
   fi
-  
+
   ## powerlevel10k theme 설치
   if [ ! -d "$ZSH_CUSTOM/themes/powerlevel10k" ]; then
-      git clone https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM}/themes/powerlevel10k
+    git clone https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM}/themes/powerlevel10k
   fi
 
   # zsh 플러그인 설치
-  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ];then
-      git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
   fi
-  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ];then
-      git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
   fi
 
   # zsh symlink
@@ -79,65 +91,81 @@ set_zsh() {
   source "${HOME}"/.zshrc
 }
 
-## OpenTofu 설치 및 구성 
+## OpenTofu 설치 및 구성
 set_opentofu() {
   echo "setting OpenTofu..."
   case ${OS} in
-    ubuntu)
-      echo "ubuntu 서버에 OpenTofu를 설치 및 구성합니다..."
-      echo "제공되는 설치 스크립트를 이용해서 설치합니다."
-      curl --ptoto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
-      chmod +x install-opentofu.sh
-      ./install-opentofu.sh --install-method deb
-      if [ $? -eq 0 ]
-      then
-	      rm -f install-opentofu.sh
-      fi
-      ;;
-    *)
-      echo "지원하지 않는 배포판입니다. : ${OS}"
-      ;;
+  ubuntu)
+    echo "ubuntu 서버에 OpenTofu를 설치 및 구성합니다..."
+    echo "제공되는 설치 스크립트를 이용해서 설치합니다."
+    curl --ptoto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
+    chmod +x install-opentofu.sh
+    ./install-opentofu.sh --install-method deb
+    if [ $? -eq 0 ]; then
+      rm -f install-opentofu.sh
+    fi
+    ;;
+  *)
+    echo "지원하지 않는 배포판입니다. : ${OS}"
+    ;;
   esac
+}
+
+## awscli 설치
+set_awscli() {
+  echo "awscli를 설치합니다..."
+  mkdir $tmp_dir
+  cd $tmp_dir || exit
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
 }
 
 ## 기본 환경 구성
 set_default() {
   echo "기본 환경을 구성합니다..."
   case ${OS} in
-    ubuntu)
-      PKG_MANAGER="sudo apt"
-      ZSH_FILE="${PWD}/zshrc_ubuntu"
-      requirement_package "${PKG_MANAGER}"
-      set_zsh "${ZSH_FILE}"
-      ;;
-    *)
-      echo "지원하지 않는 배포판입니다. : ${OS}"
-      ;;
+  ubuntu)
+    PKG_MANAGER="sudo apt"
+    ZSH_FILE="${PWD}/zshrc_ubuntu"
+    requirement_package "${PKG_MANAGER}"
+    set_zsh "${ZSH_FILE}"
+    ;;
+  *)
+    echo "지원하지 않는 배포판입니다. : ${OS}"
+    ;;
   esac
 }
 
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
-    opentofu)
-      echo "openTofu 개발 환경을 구성하는 중입니다..."
-      # OS 정보 가져오기
-      get_os
-      set_opentofu "${OS}"
-      ;;
-    default)
-      echo "기본 환경을 구성하는 중입니다..."
-      get_os
-      set_default "${OS}"
-      ;;
-    production)
-      echo "Configuring production environment..."
-      # 여기에 운영 환경을 구성하는 작업 추가
-      ;;
-    *)
-      echo "알 수 없는 환경: $1"
-      exit 1
-      ;;
+  opentofu)
+    echo "openTofu 개발 환경을 구성하는 중입니다..."
+    # OS 정보 가져오기
+    get_os
+    set_opentofu "${OS}"
+    ;;
+  default)
+    echo "기본 환경을 구성하는 중입니다..."
+    get_os
+    set_default "${OS}"
+    ;;
+  production)
+    echo "Configuring production environment..."
+    # 여기에 운영 환경을 구성하는 작업 추가
+    ;;
+  awscli)
+    echo "AWS CLI를 설치하는 중입니다..."
+    # 플랫폼 확인
+    if is_linux; then
+      set_awscli
+    fi
+    ;;
+  *)
+    echo "알 수 없는 환경: $1"
+    exit 1
+    ;;
   esac
 }
 
@@ -154,19 +182,19 @@ fi
 ## 스크립트 인자 파싱
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -h|--help)
-      print_help
-      exit 0
-      ;;
-    -e|--env)
-      shift
-      environment="$1"
-      ;;
-    *)
-      echo "알수없는 옵션 : $1"
-      print_help
-      exit 1
-      ;;
+  -h | --help)
+    print_help
+    exit 0
+    ;;
+  -e | --env)
+    shift
+    environment="$1"
+    ;;
+  *)
+    echo "알수없는 옵션 : $1"
+    print_help
+    exit 1
+    ;;
   esac
   shift
 done
