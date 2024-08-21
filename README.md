@@ -22,6 +22,8 @@ bash set_env.sh
 setEnv.sh CLI 툴로 통합 중이며, 별도의 인자값을 입력 받아 여러 환경을 구성
 
 ```bash
+# 기본 환경 구성 : zsh
+bash setEnv.sh -e default
 # OpenTofu 설치 및 구성
 bash setEnv.sh -e opentofu
 ```

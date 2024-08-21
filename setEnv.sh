@@ -2,11 +2,11 @@
 
 ######################################################################
 # Script Name  : setEnv.sh                                           #
-# Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
+# Description  : 개발 및 운영 환경을 구성하기 위한 스크립트            #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2024-01-09                                          #
-# Version      : 1.0                                                 #
+# Last Update  : 2024-18-20                                          #
+# Version      : 1.1                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -68,6 +68,31 @@ get_pkgmanager() {
 
 }
 
+## 현재 shell 가져오기
+current_shell() {
+  CURRENT_SHELL=$(echo $SHELL)
+}
+
+## shell 변경하기
+change_zsh() {
+  if [[ $CURRENT_SHELL == *"/bash" ]]; then
+      echo "현재 셸은 bash입니다. zsh로 변경합니다."
+
+      # zsh 설치 확인
+      if ! command -v zsh &> /dev/null; then
+          echo "zsh가 설치되어 있지 않습니다. zsh를 설치하세요."
+          exit 1
+      fi
+
+      # 로그인 셸 변경
+      chsh -s $(which zsh)
+      echo "zsh로 셸이 변경되었습니다. 변경 사항을 적용하려면 로그아웃 후 다시 로그인하십시오."
+  else
+      echo "현재 셸은 bash가 아닙니다. 현재 셸: $CURRENT_SHELL"
+  fi
+
+}
+
 # 필수 패키지 설치
 requirement_package() {
   $PKG_MANAGER install -y wget curl git zsh bat unzip
@@ -79,7 +104,7 @@ set_zsh() {
   ALIAS_DIR="${PWD}/alias"
   # oh-my-zsh 설치
   if [ ! -d "${HOME}/.oh-my-zsh" ]; then
-    Yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
   else
     echo "oh-my-zsh은 이미 설치되었습니다."
   fi
@@ -141,9 +166,11 @@ set_default() {
   echo "기본 환경을 구성합니다..."
   case ${OS} in
   ubuntu)
-    PKG_MANAGER="sudo apt"
+    $PKG_MANAGER update -y
+    sudo test -f /etc/sudoers.d/$USER || echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers.d/$USER
+    current_shell
+    change_zsh
     ZSH_FILE="${PWD}/zshrc_ubuntu"
-    requirement_package "${PKG_MANAGER}"
     set_zsh "${ZSH_FILE}"
     ;;
   *)
