@@ -137,7 +137,7 @@ set_opentofu() {
   ubuntu)
     echo "ubuntu 서버에 OpenTofu를 설치 및 구성합니다..."
     echo "제공되는 설치 스크립트를 이용해서 설치합니다."
-    curl --ptoto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh
+    curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh || exit
     chmod +x install-opentofu.sh
     ./install-opentofu.sh --install-method deb
     if [ $? -eq 0 ]; then
