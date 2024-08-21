@@ -1,1 +1,5 @@
-alias tf='terraform'
+if command -v tofu &> /dev/null; then
+    alias tf='tofu'
+elif command -v terraform &> /dev/null; then
+    alias tf='terraform'
+fi

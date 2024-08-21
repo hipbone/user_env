@@ -11,3 +11,4 @@ alias hive-live-aws-lb="cd ~/src/iep-git/iep-aws-projects/hive-live/ap-northeast
 
 # tools
 [ -x "$(which bat)" ] && alias cat="bat"
+[ -x "$(which batcat)" ] && alias cat="batcat"
