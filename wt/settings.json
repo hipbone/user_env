@@ -1,15 +1,13 @@
 {
     "$help": "https://aka.ms/terminal-documentation",
     "$schema": "https://aka.ms/terminal-profiles-schema",
-    "actions": 
-    [
+    "actions": [
         {
             "command": "find",
             "keys": "ctrl+shift+f"
         },
         {
-            "command": 
-            {
+            "command": {
                 "action": "splitPane",
                 "split": "auto",
                 "splitMode": "duplicate"
@@ -20,8 +18,7 @@
             "command": "paste"
         },
         {
-            "command": 
-            {
+            "command": {
                 "action": "copy",
                 "singleLine": false
             },
@@ -34,18 +31,10 @@
     ],
     "copyFormatting": "none",
     "copyOnSelect": false,
-    "defaultProfile": "{2c4de342-38b7-51cf-b940-2309a097f518}",
-    "newTabMenu": 
-    [
-        {
-            "type": "remainingProfiles"
-        }
-    ],
-    "profiles": 
-    {
+    "defaultProfile": "{963ff2f7-6aed-5ce3-9d91-90d99571f53a}",
+    "profiles": {
         "defaults": {},
-        "list": 
-        [
+        "list": [
             {
                 "commandline": "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
                 "guid": "{61c54bbd-c2c6-5271-96e7-009a87ff44bf}",
@@ -65,28 +54,26 @@
                 "source": "Windows.Terminal.Azure"
             },
             {
-                "guid": "{51855cb2-8cce-5362-8f54-464b92b32386}",
-                "hidden": false,
-                "name": "Ubuntu",
-                "source": "CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc"
+                "experimental.retroTerminalEffect": false,
+                "font": {
+                    "face": "MesloLGS NF",
+                    "size": 10,
+                    "weight": "normal"
+                },
+                "guid": "{963ff2f7-6aed-5ce3-9d91-90d99571f53a}",
+                "hidden": true,
+                "name": "Ubuntu-24.04",
+                "source": "Windows.Terminal.Wsl"
             },
             {
-                "colorScheme": "VSCode",
-                "cursorShape": "filledBox",
-                "font": 
-                {
-                    "face": "MesloLGS NF",
-                    "size": 10.0
-                },
-                "guid": "{2c4de342-38b7-51cf-b940-2309a097f518}",
+                "guid": "{acbafd15-cbbb-5bb3-8a61-bed446ff4b83}",
                 "hidden": false,
-                "name": "Ubuntu",
-                "source": "Windows.Terminal.Wsl"
+                "name": "Ubuntu 24.04 LTS",
+                "source": "CanonicalGroupLimited.Ubuntu24.04LTS_79rhkp1fndgsc"
             }
         ]
     },
-    "schemes": 
-    [
+    "schemes": [
         {
             "background": "#0C0C0C",
             "black": "#0C0C0C",
@@ -287,35 +274,12 @@
             "cyan": "#3A96DD",
             "foreground": "#FFFFFF",
             "green": "#26A269",
-            "name": "Ubuntu-ColorScheme",
+            "name": "Ubuntu-24.04-ColorScheme",
             "purple": "#881798",
             "red": "#C21A23",
             "selectionBackground": "#FFFFFF",
             "white": "#CCCCCC",
             "yellow": "#A2734C"
-        },
-        {
-            "background": "#232323",
-            "black": "#000000",
-            "blue": "#579BD5",
-            "brightBlack": "#797979",
-            "brightBlue": "#9BDBFE",
-            "brightCyan": "#2BC4E2",
-            "brightGreen": "#1AD69C",
-            "brightPurple": "#DF89DD",
-            "brightRed": "#F6645D",
-            "brightWhite": "#EAEAEA",
-            "brightYellow": "#F6F353",
-            "cursorColor": "#FFFFFF",
-            "cyan": "#00B6D6",
-            "foreground": "#D3D3D3",
-            "green": "#3FC48A",
-            "name": "VSCode",
-            "purple": "#CA5BC8",
-            "red": "#D8473F",
-            "selectionBackground": "#FFFFFF",
-            "white": "#EAEAEA",
-            "yellow": "#D7BA7D"
         },
         {
             "background": "#000000",
@@ -340,6 +304,5 @@
             "white": "#C0C0C0",
             "yellow": "#808000"
         }
-    ],
-    "themes": []
+    ]
 }
