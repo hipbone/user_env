@@ -1,13 +1,9 @@
+# src
 alias cdgit="cd ~/src/github"
 alias cdiep="cd ~/src/iep-git"
 
-# AWS Terraform Project Path
-alias hive-live-aws="cd ~/src/iep-git/iep-aws-projects/hive-live"
-alias hive-sandbox-aws="cd ~/src/iep-git/iep-aws-projects/hive-sandbox"
-alias iep-rnd-aws="cd ~/src/iep-git/iep-aws-projects/iep-rnd-aws"
-alias iep-manage-aws="cd ~/src/iep-git/iep-aws-projects/iep-manage-aws"
-alias hive-live-aws-ec2="cd ~/src/iep-git/iep-aws-projects/hive-live/ap-northeast-2/live/ec2-instance"
-alias hive-live-aws-lb="cd ~/src/iep-git/iep-aws-projects/hive-live/ap-northeast-2/live/load-balancer"
+# terraform
+alias cdtf="cd ~/src/iep-git/iep-terraform"
 
 # kube
 alias k="kubectl"
