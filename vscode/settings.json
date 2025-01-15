@@ -1,0 +1,106 @@
+{
+  // Editor 설정
+  "editor.formatOnSave": true,
+  "[python]": {
+    // "editor.formatOnType": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[terraform]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "[shellscript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[ignore]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "workbench.colorTheme": "modulestf-dark",
+  "files.associations": {
+    "*.hcl": "terraform",
+    "*.tfvars": "terraform",
+    "*.tf": "terraform",
+    "*.tf.override": "terraform"
+  },
+  "yaml.schemas": {
+    "file:///c%3A/Users/hipbone/.vscode/extensions/atlassian.atlascode-3.2.1/resources/schemas/pipelines-schema.json": "bitbucket-pipelines.yml"
+  },
+  "git-autoconfig.configList": [
+    {}
+  ],
+  "markdown-preview-enhanced.previewTheme": "solarized-dark.css",
+  "python.linting.pylintEnabled": true,
+  "python.linting.pylintArgs": [
+    "--disable=C0114,C0103"
+  ],
+  "boot-java.rewrite.reconcile": true,
+  // remote SSH
+  "remote.SSH.remotePlatform": {
+    "pp-rndm-test-01": "linux"
+  },
+  "emmet.triggerExpansionOnTab": true,
+  "terraform.validation.enableEnhancedValidation": false,
+  "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+  "DockerRun.DisableAutoGenerateConfig": true,
+  "alignment.chars": {
+    ":": {
+      "spaceBefore": 0,
+      "spaceAfter": 1
+    },
+    "::": {
+      "spaceBefore": 0,
+      "spaceAfter": 0
+    },
+    "=": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "===": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "==": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "=>": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "+=": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "-=": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "*=": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    },
+    "/=": {
+      "spaceBefore": 1,
+      "spaceAfter": 1
+    }
+  },
+  "window.zoomLevel": -2,
+  "workbench.editorAssociations": {},
+  "python.languageServer": "Pylance",
+  "remote.autoForwardPortsSource": "hybrid",
+  "security.workspace.trust.untrustedFiles": "open",
+  // puppet
+  "puppet.editorService.enable": true,
+  "puppet.editorService.formatOnType.enable": true, // puppet 문서 온타입 포맷터를 활성화/비활성화
+  "puppet.editorService.hover.showMetadataInfo": true, // puppet 모듈 버전 정보를 표시
+  "puppet.installType": "auto", // pdk를 사용하도록 확장 구성, auto, agent 가능
+  "puppet.format.enable": true, // puppet 문서 포맷터 활성화/비활성화
+  "puppet.pdk.checkVersion": true, // pdk 버전이 최신인지 검사
+}
