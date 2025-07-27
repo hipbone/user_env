@@ -2,11 +2,11 @@
 
 ######################################################################
 # Script Name  : setEnv.sh                                           #
-# Description  : 개발 및 운영 환경을 구성하기 위한 스크립트            #
+# Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2024-18-20                                          #
-# Version      : 1.1                                                 #
+# Last Update  : 2025-07-27                                          #
+# Version      : 1.2                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -31,6 +31,7 @@ print_help() {
   echo "  default                       기본 환경을 구성(zsh)"
   echo "  opentofu                      OpenTofu를 설치하고 구성"
   echo "  awscli                        aws cli를 설치"
+  echo "  brew                          homebrew 설치"
 }
 
 ## OS 정보 가져오기
@@ -179,6 +180,18 @@ set_default() {
   esac
 }
 
+## brew 설치 및 설정
+set_brew() {
+  echo "brew를 설치합니다..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [ $? -eq 0 ]; then
+    echo "brew 설치가 완료되었습니다."
+  else
+    echo "brew 설치에 실패했습니다."
+    exit 1
+  fi
+}
+
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
@@ -199,6 +212,12 @@ configure_environment() {
     # 플랫폼 확인
     if $(is_linux); then
       set_awscli
+    fi
+    ;;
+  brew)
+    echo "Homebrew를 설치하는 중입니다..."
+    if $(is_linux); then
+      set_brew
     fi
     ;;
   *)
