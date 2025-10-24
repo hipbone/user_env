@@ -1,0 +1,6 @@
+alias k="kubectl"
+alias kcg="kubectl config get-contexts"
+alias kcc="kubectl config current-context"
+alias kcu="kubectl config use-context"
+alias kgn="kubectl get nodes"
+alias kgp="kubectl get pods"
