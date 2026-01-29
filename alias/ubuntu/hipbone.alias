@@ -1,6 +1,7 @@
 # src
 alias cdgit="cd ~/src/github"
 alias cdiep="cd ~/src/iep-git"
+alias cdp="cd ~/src/iep-git/puppet/data"
 
 # terraform
 alias cdtf="cd ~/src/iep-git/iep-terraform"
@@ -11,3 +12,6 @@ alias k="kubectl"
 # tools
 [ -x "$(which bat)" ] && alias cat="bat"
 [ -x "$(which batcat)" ] && alias cat="batcat"
+
+# ssl test
+alias ssltest='ssh -l sreemem 13.124.194.123'
