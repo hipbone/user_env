@@ -194,16 +194,22 @@ set_brew() {
   fi
 }
 
-## tccli(Tencent Cloud CLI) 설치
+## tccli(Tencent Cloud CLI) 설치 - pipx를 사용하여 격리된 환경에 설치
 set_tccli() {
   echo "Tencent Cloud CLI(tccli)를 설치합니다..."
-  # pip3가 설치되어 있는지 확인
-  if ! command -v pip3 &> /dev/null; then
-    echo "pip3가 설치되어 있지 않습니다. python3-pip를 설치합니다."
-    $PKG_MANAGER install -y python3-pip
+
+  # pipx 설치 확인 및 설치 (apt로 설치하여 PEP 668 문제 회피)
+  if ! command -v pipx &> /dev/null; then
+    echo "pipx가 설치되어 있지 않습니다. pipx를 설치합니다."
+    $PKG_MANAGER install -y pipx
+    # pipx ensurepath는 사용하지 않음
+    # - ensurepath는 zshrc를 직접 수정하는데, zshrc는 git으로 관리되므로 부적합
+    # - 대신 zshrc에서 ~/.local/bin을 조건부로 PATH에 추가하도록 설정함
+    export PATH="$HOME/.local/bin:$PATH"
   fi
-  # tccli 설치
-  pip3 install tccli
+
+  # tccli 설치 (pipx를 통해 격리된 가상환경에 설치)
+  pipx install tccli
   if [ $? -eq 0 ]; then
     echo "tccli 설치가 완료되었습니다."
     echo "tccli configure 명령으로 인증 정보를 설정하세요."
