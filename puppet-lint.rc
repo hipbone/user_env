@@ -1,0 +1,3 @@
+# --no-<check_name>-check
+--no-top_scope_facts-check
+
