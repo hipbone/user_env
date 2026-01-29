@@ -5,8 +5,8 @@
 # Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2025-07-27                                          #
-# Version      : 1.2                                                 #
+# Last Update  : 2026-01-29                                          #
+# Version      : 1.3                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -32,6 +32,8 @@ print_help() {
   echo "  opentofu                      OpenTofu를 설치하고 구성"
   echo "  awscli                        aws cli를 설치"
   echo "  brew                          homebrew 설치"
+  echo "  tccli                         Tencent Cloud CLI를 설치"
+  echo "  coscli                        Tencent Cloud COS CLI를 설치"
 }
 
 ## OS 정보 가져오기
@@ -192,6 +194,64 @@ set_brew() {
   fi
 }
 
+## tccli(Tencent Cloud CLI) 설치
+set_tccli() {
+  echo "Tencent Cloud CLI(tccli)를 설치합니다..."
+  # pip3가 설치되어 있는지 확인
+  if ! command -v pip3 &> /dev/null; then
+    echo "pip3가 설치되어 있지 않습니다. python3-pip를 설치합니다."
+    $PKG_MANAGER install -y python3-pip
+  fi
+  # tccli 설치
+  pip3 install tccli
+  if [ $? -eq 0 ]; then
+    echo "tccli 설치가 완료되었습니다."
+    echo "tccli configure 명령으로 인증 정보를 설정하세요."
+  else
+    echo "tccli 설치에 실패했습니다."
+    exit 1
+  fi
+}
+
+## coscli(Tencent Cloud COS CLI) 설치
+set_coscli() {
+  echo "Tencent Cloud COS CLI(coscli)를 설치합니다..."
+  mkdir -p $tmp_dir
+  cd $tmp_dir || exit
+
+  # 아키텍처 확인
+  ARCH=$(uname -m)
+  case $ARCH in
+    x86_64)
+      COSCLI_ARCH="amd64"
+      ;;
+    aarch64)
+      COSCLI_ARCH="arm64"
+      ;;
+    *)
+      echo "지원하지 않는 아키텍처입니다: $ARCH"
+      exit 1
+      ;;
+  esac
+
+  # coscli 다운로드 및 설치
+  COSCLI_URL="https://cosbrowser.cloud.tencent.com/software/coscli/coscli-linux-${COSCLI_ARCH}"
+  curl -sL "$COSCLI_URL" -o coscli
+  chmod +x coscli
+  sudo mv coscli /usr/local/bin/
+
+  cd ..
+  rm -rf $tmp_dir
+
+  if command -v coscli &> /dev/null; then
+    echo "coscli 설치가 완료되었습니다."
+    echo "coscli config 명령으로 인증 정보를 설정하세요."
+  else
+    echo "coscli 설치에 실패했습니다."
+    exit 1
+  fi
+}
+
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
@@ -218,6 +278,18 @@ configure_environment() {
     echo "Homebrew를 설치하는 중입니다..."
     if $(is_linux); then
       set_brew
+    fi
+    ;;
+  tccli)
+    echo "Tencent Cloud CLI를 설치하는 중입니다..."
+    if $(is_linux); then
+      set_tccli
+    fi
+    ;;
+  coscli)
+    echo "Tencent Cloud COS CLI를 설치하는 중입니다..."
+    if $(is_linux); then
+      set_coscli
     fi
     ;;
   *)
