@@ -1,2 +1,14 @@
 # 전체 인스터스 목록 가져오기
 alias ec2-servers-hive-live="aws ec2 describe-instances --query \"Reservations[*].Instances[*].Tags[?Key=='Name'].Value\" --output text --profile hive-live"
+
+# 칠레 - 산티아고 Local Zone에서 사용 가능한 인스턴스 타입 조회하기
+alias aws-ec2-scl-types='aws ec2 describe-instance-type-offerings \
+  --location-type availability-zone \
+  --filters "Name=location,Values=us-east-1-scl-1a" \
+  --region us-east-1 \
+  --query "InstanceTypeOfferings[].InstanceType" \
+  --output table \
+  --profile com2usplatform-live'
+
+# ap-east-2 옵트인 리전 조회
+alias aws-account-opt='aws account get-region-opt-status --region-name ap-east-2'
