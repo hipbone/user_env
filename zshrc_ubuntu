@@ -60,7 +60,10 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm"
 
 # rbenv
-eval "$(rbenv init -)"
+if command -v rbenv &>/dev/null; then
+  eval "$(rbenv init -)"
+fi
 
 # ~/.local/bin PATH 설정 (pipx, pip --user 등)
 [[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
