@@ -3,3 +3,9 @@ alias tc-hive-test='tccli sts AssumeRole \
   --RoleArn "qcs::cam::uin/200035697353:roleName/IepIacRole" \
   --RoleSessionName "hive-test" \
   --DurationSeconds 3600'
+
+alias tc-hive-sandbox='tccli sts AssumeRole \
+  --profile default \
+  --RoleArn "qcs::cam::uin/200034346413:roleName/IepIacRole" \
+  --RoleSessionName "hive-sandbox" \
+  --DurationSeconds 3600'
