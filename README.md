@@ -34,6 +34,7 @@ bash setEnv.sh -e default
 | `brew` | Homebrew 설치 |
 | `tccli` | Tencent Cloud CLI 설치 (pipx 기반 격리 환경) |
 | `coscli` | Tencent Cloud COS CLI 설치 |
+| `go` | Go(golang) 공식 바이너리 설치 (`/usr/local/go`) |
 
 ```bash
 # 예시

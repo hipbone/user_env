@@ -34,6 +34,7 @@ print_help() {
   echo "  brew                          homebrew 설치"
   echo "  tccli                         Tencent Cloud CLI를 설치"
   echo "  coscli                        Tencent Cloud COS CLI를 설치"
+  echo "  go                            Go(golang)를 설치"
 }
 
 ## OS 정보 가져오기
@@ -258,6 +259,55 @@ set_coscli() {
   fi
 }
 
+## go(golang) 설치 - 공식 바이너리를 /usr/local/go에 설치
+set_go() {
+  echo "Go(golang)를 설치합니다..."
+
+  # 아키텍처 확인
+  ARCH=$(uname -m)
+  case $ARCH in
+    x86_64)
+      GO_ARCH="amd64"
+      ;;
+    aarch64)
+      GO_ARCH="arm64"
+      ;;
+    *)
+      echo "지원하지 않는 아키텍처입니다: $ARCH"
+      exit 1
+      ;;
+  esac
+
+  # 최신 안정 버전 조회 (예: go1.22.0)
+  GO_VERSION=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n 1)
+  if [ -z "$GO_VERSION" ]; then
+    echo "Go 최신 버전 정보를 가져오지 못했습니다."
+    exit 1
+  fi
+  echo "설치할 버전: ${GO_VERSION} (${GO_ARCH})"
+
+  mkdir -p $tmp_dir
+  cd $tmp_dir || exit
+
+  # 공식 바이너리 다운로드 및 설치
+  GO_TARBALL="${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
+  curl -fsSL "https://go.dev/dl/${GO_TARBALL}" -o "$GO_TARBALL"
+  # 기존 설치를 제거한 뒤 새로 압축 해제 (공식 권장 방식)
+  sudo rm -rf /usr/local/go
+  sudo tar -C /usr/local -xzf "$GO_TARBALL"
+
+  cd ..
+  rm -rf $tmp_dir
+
+  if /usr/local/go/bin/go version &> /dev/null; then
+    echo "Go 설치가 완료되었습니다: $(/usr/local/go/bin/go version)"
+    echo "PATH에 /usr/local/go/bin이 포함되어야 합니다. (zshrc_ubuntu에서 자동 설정)"
+  else
+    echo "Go 설치에 실패했습니다."
+    exit 1
+  fi
+}
+
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
@@ -296,6 +346,12 @@ configure_environment() {
     echo "Tencent Cloud COS CLI를 설치하는 중입니다..."
     if $(is_linux); then
       set_coscli
+    fi
+    ;;
+  go)
+    echo "Go(golang)를 설치하는 중입니다..."
+    if $(is_linux); then
+      set_go
     fi
     ;;
   *)
