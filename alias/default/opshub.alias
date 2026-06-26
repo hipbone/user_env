@@ -1,0 +1,30 @@
+# ops-hub CLI 단축 별칭 (prefix: oh-)
+# 전제: ops-hub 가 PATH에 있어야 함 (ops-hub 레포에서 `make cli-install`).
+# 모든 별칭 뒤에 추가 옵션을 붙일 수 있음 (예: oh-assets --provider AWS, oh-fw --ip 10.1.2.3).
+# 출력 형식 전역 옵션은 명령 앞: oh -o json assets list ...
+
+alias oh='ops-hub'
+
+# --- 방화벽 정책 조회 ---
+alias oh-fw='ops-hub fw-policy search'          # 예: oh-fw --ip 10.1.2.3 --port 8080
+alias oh-fws='ops-hub fw-policy summary'        # 수집 현황 요약
+
+# --- 자산 조회 ---
+alias oh-assets='ops-hub assets list'           # 예: oh-assets --asset-type server --status stopped
+alias oh-search='ops-hub assets search'         # 예: oh-search 10.1.2.3  (이름·IP·리소스ID·태그)
+alias oh-idle='ops-hub assets idle'             # 예: oh-idle --min-days 30
+
+# --- 보안 감사 ---
+alias oh-audit='ops-hub security-audit summary'      # 카테고리별 건수
+alias oh-audit-list='ops-hub security-audit list'    # 예: oh-audit-list mfa --provider AWS
+
+# --- 동기화 이력 ---
+alias oh-sync='ops-hub sync-runs latest'        # 자산 타입별 최신 결과
+alias oh-syncs='ops-hub sync-runs list'         # 예: oh-syncs --status failed
+
+# --- SSL 인증서 ---
+alias oh-ssl='ops-hub ssl expiring'             # 예: oh-ssl --days 30
+
+# --- 운영 ---
+alias oh-backup='ops-hub backup heartbeat'      # 예: oh-backup cos-iep-daily --status success
+alias oh-gcp-init='ops-hub gcp init'            # 예: oh-gcp-init --no-iaas my-project
