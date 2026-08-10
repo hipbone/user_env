@@ -1,0 +1,63 @@
+" ~/.vimrc — 플러그인 매니저 없는 최소 설정
+"
+" 의도: 서버에 접속해서 파일을 잠깐 고칠 때 필요한 것만 담는다.
+" 무거운 편집은 VS Code로 하므로 여기에 플러그인 스택을 다시 들이지 않는다.
+" vim 기본 기능만 사용하므로 어떤 장비에 떨궈도 그대로 동작한다.
+
+set nocompatible
+
+" --- 표시 ---
+syntax on
+set number                " 줄 번호
+set ruler                 " 커서 위치 표시
+set showcmd               " 입력 중인 명령 표시
+set laststatus=2          " 상태줄 항상 표시
+set background=dark
+set cursorline            " 현재 줄 강조
+set scrolloff=3           " 커서 위아래 최소 3줄 확보
+
+" --- 들여쓰기 ---
+filetype plugin indent on
+set expandtab             " 탭 대신 스페이스
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set autoindent
+set smartindent
+
+" YAML / JSON 계열은 2칸 (.editorconfig와 동일하게)
+autocmd FileType yaml,yml,json,javascript,html,css,scss
+      \ setlocal tabstop=2 shiftwidth=2 softtabstop=2
+
+" --- 검색 ---
+set hlsearch              " 검색어 강조
+set incsearch             " 입력하는 즉시 검색
+set ignorecase            " 대소문자 무시하되
+set smartcase             " 대문자를 넣으면 구분
+" Esc 두 번으로 검색 강조 해제
+nnoremap <silent> <Esc><Esc> :nohlsearch<CR>
+
+" --- 편집 ---
+set backspace=indent,eol,start
+set encoding=utf-8
+set fileencodings=utf-8,euc-kr
+set clipboard=unnamedplus " 시스템 클립보드 연동 (+clipboard 빌드에서만)
+set mouse=a
+set history=1000
+set wildmenu              " 명령행 자동완성 메뉴
+
+" --- 파일 ---
+set nobackup
+set noswapfile
+set autoread              " 외부에서 바뀐 파일 자동 반영
+
+" 마지막으로 편집하던 줄로 커서 복원
+autocmd BufReadPost *
+      \ if line("'\"") > 0 && line("'\"") <= line("$") |
+      \   exe "normal! g`\"" |
+      \ endif
+
+" --- 키맵 ---
+let mapleader = ","
+" 편집 중인 파일을 sudo로 저장 (읽기 전용 파일을 열었을 때)
+cnoremap w!! w !sudo tee % > /dev/null

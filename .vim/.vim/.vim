@@ -1,1 +1,0 @@
-/Users/hipbone/git_repo/user_env/.vim

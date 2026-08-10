@@ -1,0 +1,179 @@
+# 변경 이력
+
+구조를 크게 바꾼 작업만 상세히 기록합니다.
+alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므로 여기 쓰지 않습니다.
+
+---
+
+## 2026-08-10 — 저장소 구조 전면 정리
+
+### 배경
+
+프로젝트 목적을 다시 정리하면서(개인 작업 환경을 여러 장비에 빠르고 동일하게 재현) 현재 구조를
+점검한 결과, 2019~2021년 macOS 시절 잔재가 상당량 남아 있고 목적 대비 빠진 부분이 있었습니다.
+설계 원칙을 `CLAUDE.md` 로 문서화하면서 함께 정리했습니다.
+
+### 1. 삭제한 파일
+
+| 대상 | 삭제 이유 |
+| --- | --- |
+| `.vim/` 전체 | `.gitmodules` 없이 gitlink(mode 160000)만 8개 남아 있어 clone하면 빈 디렉토리만 생성됨. `.vim/.vim/.vim` 은 `/Users/hipbone/git_repo/user_env/.vim` 를 가리키는 깨진 심볼릭 링크(2021년 macOS 경로). `.netrwhist` 2개는 netrw 캐시로 애초에 커밋 대상이 아님 |
+| `set_env.sh` | Ubuntu 경로는 `setEnv.sh` 로 대체 완료. 남은 CentOS/macOS 경로에 실제 버그가 있어 실행 자체가 불가능한 상태였음 — `yum install -y zshset_env.sh`(오타), `Yes \|`(대문자), `~/User_env`(대소문자 불일치), `brew install -y`(brew에 없는 플래그) |
+| `zshrc_centos` | CentOS 미사용 (2020년 이후 변경 없음) |
+| `bash_profile_mac` | bash 미사용 (2019년 이후 변경 없음) |
+| `set_env_linux.sh` | Vundle 설치 스크립트. vim 플러그인 스택을 걷어내면서 함께 제거 |
+| `vimrc.default` | `.vimrc` 와 내용이 갈라진 채 방치(플러그인 목록이 서로 달랐음). 하나로 통합 |
+| `plugin/python_autopep8.vim`, `ftplugin/python.vim` | Vundle 스택 부속 파일 |
+| `setEnv.sh` 의 `production)` 분기 | 내용 없는 stub |
+
+> 모두 git 이력에 남아 있으므로 필요하면 복원 가능합니다.
+> 예: `git show <이 커밋>^:set_env.sh > set_env.sh`
+
+### 2. 디렉토리 재편
+
+루트에 흩어져 있던 설정 파일을 `config/` 로 모았습니다.
+`zshrc_ubuntu` 와 `alias/` 는 홈의 심볼릭 링크가 이미 가리키고 있어 **일부러 옮기지 않았습니다.**
+
+| 이전 | 이후 |
+| --- | --- |
+| `tmux/tmux.conf` | `config/tmux.conf` |
+| `vscode/settings.json` | `config/vscode-settings.json` |
+| `wt/settings.json` | `config/wt-settings.json` |
+| `puppet-lint.rc` | `config/puppet-lint.rc` |
+| `.vimrc` | `config/vimrc` |
+| (신규) | `config/p10k.zsh` |
+| (신규) | `functions/common.zsh` |
+
+`tmux/`, `vscode/`, `wt/`, `plugin/`, `ftplugin/`, `obsidian/`(빈 디렉토리) 는 제거되었습니다.
+
+일부 파일(`puppet-lint.rc`, `tmux.conf`, `vscode-settings.json`)이 root 소유였던 것도
+`hipbone` 소유로 정정했습니다. (sudo로 만들어졌던 것으로 보임)
+
+### 3. p10k 설정을 저장소로 편입 — **가장 실질적인 개선**
+
+기존에는 `~/.p10k.zsh`(95KB)가 버전 관리 밖에 있었습니다.
+새 장비마다 `p10k configure` 를 다시 돌려야 했고 결과가 장비마다 달라졌습니다.
+"어느 장비에서든 동일한 환경" 이라는 목적에 정면으로 어긋나는 부분이라 저장소로 가져왔습니다.
+
+- `~/.p10k.zsh` → `config/p10k.zsh` 로 복사 후, `~/.p10k.zsh` 를 저장소로 향하는 심볼릭 링크로 교체
+- 원본은 `~/.p10k.zsh.bak` 으로 백업 (내용 동일함을 diff로 확인)
+- 토큰·경로 등 민감정보가 없는지 스캔 완료 (일반 주석만 존재)
+
+이제 프롬프트를 바꾸면 `p10k configure` 실행 결과가 저장소 파일에 바로 반영되므로,
+`git diff` 로 확인하고 커밋하면 다른 장비에도 그대로 전파됩니다.
+
+### 4. 설정 파일 연동 방식 도입
+
+이전에는 `tmux/`, `vscode/`, `wt/` 가 저장소에 파일만 있고 **어떤 스크립트도 연결하지 않았습니다.**
+(실제 `~/.tmux.conf` 는 저장소와 무관한 16바이트 파일이었음)
+
+두 갈래로 구현했습니다.
+
+**(a) 심볼릭 링크 — Linux / macOS**
+
+`setEnv.sh -e dotfiles` 로 아래를 연결합니다. 기존 실제 파일은 `.bak` 으로 백업됩니다.
+
+```
+alias/            → ~/alias
+functions/        → ~/functions
+config/tmux.conf  → ~/.tmux.conf
+config/vimrc      → ~/.vimrc
+config/p10k.zsh   → ~/.p10k.zsh
+```
+
+디렉토리 링크에는 `ln -fsn` 을 씁니다. `-n` 이 없으면 이미 링크가 있을 때
+그 **안쪽에** 중첩 생성되는 문제가 있습니다(작업 중 실제로 발생하여 수정).
+
+**(b) 복사 동기화 — Windows**
+
+Windows 파일시스템(drvfs)에는 WSL 심볼릭 링크가 통하지 않습니다.
+Windows Terminal이나 VS Code(Windows 앱)가 WSL 링크를 따라가지 못하므로 **복사**로 동기화합니다.
+
+```bash
+bash setEnv.sh -e winpush   # 저장소 → Windows (기존 설정은 .bak 백업)
+bash setEnv.sh -e winpull   # Windows → 저장소 (GUI에서 바꾼 설정 회수)
+```
+
+- `%USERPROFILE%` 은 `cmd.exe /c echo %USERPROFILE%` + `wslpath` 로 조회하고,
+  실패하면 `/mnt/c/Users/$(whoami)` 로 대체
+- 대상: `AppData/Roaming/Code/User/settings.json`,
+  `AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json`
+- 각 대상의 부모 디렉토리가 없으면(미설치) 건너뜁니다
+
+### 5. setEnv.sh 버그 수정 (v1.3 → v2.0)
+
+| 문제 | 수정 |
+| --- | --- |
+| `is_linux()` 가 성공 시 `exit 0` 을 호출 | `return 0/1` 로 변경. 호출부도 `if $(is_linux)`(서브셸) → `is_linux && ...` 로 정정. 기존 코드는 서브셸 안이라 우연히 동작하던 것 |
+| `requirement_package` 가 항상 실행 | `set_default` 안으로 이동. `-e go` 처럼 셸 세팅과 무관한 작업에서 apt 갱신을 강요하지 않음 |
+| `${PWD}` 의존 (저장소 루트에서만 실행 가능) | `repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` 로 변경. 어느 디렉토리에서 실행해도 동작 |
+| `cd $tmp_dir` 후 `rm -rf ../$tmp_dir` | `cd` 없이 절대 경로로만 처리. `tmp_dir` 도 `${repo_dir}/tmp` 로 고정 |
+| `curl` 에 `-f` 누락 | 전부 `curl -fsSL ... \|\| exit 1`. `-f` 가 없으면 404 응답 본문을 파일로 저장함 |
+| `x86_64`/`aarch64` 분기가 `set_coscli`, `set_go` 에 중복 | `get_arch()` → `ARCH_ALIAS` 로 통합 |
+| `set_awscli` 재실행 시 실패 | `./aws/install --update` 로 변경 + 설치 후 `command -v` 검증 추가 |
+| 홈 파일을 백업 없이 덮어씀 | `backup_if_real_file()` 추가 (심볼릭 링크는 그냥 교체, 실제 파일만 `.bak`) |
+
+`print_help` 도 카테고리(셸 환경 / Windows 연동 / 도구 설치)로 재구성했습니다.
+
+### 6. zshrc 정리
+
+**`zshrc_ubuntu`**
+
+- `eval "$(direnv hook zsh)"` 가 무조건 실행되어 direnv 미설치 장비에서 셸 시작마다 에러가 나던 것을
+  `command -v direnv` 가드로 감쌌습니다 (설계 원칙 "조건부 로드" 위반이었음)
+- `~/functions/*` 로드 추가
+- alias 로드 루프를 zsh glob 한정자 `(.N)` 기반으로 통합 (빈 디렉토리에서도 에러 없음)
+- 섹션 주석으로 구조화 (oh-my-zsh / 환경변수 / alias·functions / 로케일 / 개발 도구 / PATH / 자동완성)
+- 파일 상단에 "홈이 아니라 저장소 원본을 고칠 것" 안내 추가
+
+**`zshrc_mac`**
+
+- `export ZSH="/Users/hipbone/.oh-my-zsh"` 하드코딩 → `$HOME/.oh-my-zsh`
+- **alias를 아예 로드하지 않던 문제 수정.** `alias/default/*` 와 `functions/*` 를 로드합니다
+  (`alias/ubuntu/*` 는 제외)
+- `~/.env_vars` 로드 추가
+- `zshrc_ubuntu` 와 같은 섹션 구조로 맞춤
+
+### 7. 신규 — functions/
+
+alias로 표현하기 어려운(인자 처리·분기가 필요한) 것을 담을 자리를 만들었습니다.
+`functions/common.zsh` 에 `mkcd`, `extract`, `path`, `up` 을 넣었습니다.
+
+판단 기준: 한 줄 치환이면 `alias/`, 그 이상이면 `functions/`.
+
+### 8. 기타
+
+- `config/vimrc` 를 플러그인 매니저 없는 최소 설정으로 재작성.
+  2019년 스택(Vundle, neocomplcache, solarized)을 되살리는 대신,
+  "서버에서 잠깐 고칠 때 필요한 것만" 담는 방향으로 정리 (어떤 장비에 떨궈도 그대로 동작)
+- `.gitignore`: 의미 없어진 `.vim/bundle/*` → `tmp/`, `*.bak`, `*.dist`
+- `.editorconfig`: `*.sh` 의 `indent_size` 가 4인데 주석은 "2칸"이라고 적혀 있었음.
+  실제 코드가 2칸이므로 값을 2로 정정
+- `setting_mac.sh`: 사라진 `.vimrc`/`.vim` 참조 제거, `config/` 기준으로 갱신,
+  `alias`/`functions`/`tmux.conf`/`p10k.zsh` 링크 추가
+
+### 9. 문서
+
+- `CLAUDE.md` 신규 작성 — 프로젝트 목적, 설계 원칙 6가지, 저장소 구조,
+  확장 체크리스트, alias/functions 규칙, 코딩 규칙, 커밋 규칙, 남은 과제
+- `README.md` 전면 갱신 — 새 구조, 연동 방식(링크 vs 복사) 반영
+- `history.md` 신규 (이 문서)
+
+### 검증 내역
+
+- `bash -n` / `zsh -n` — 전 스크립트 통과
+- `setEnv.sh -e dotfiles` 실제 실행 — 링크 6개 정상 생성, 재실행 멱등성 확인
+- `zsh -i` — `mkcd`/`up` 함수, `oh`/`k` alias 로드 및 PATH(go, tccli, aws) 정상 확인
+- Windows 경로 탐지 — 복사 없이 경로 해석만 확인 (VS Code, Terminal 둘 다 실제 경로 존재)
+- `config/p10k.zsh` 와 `~/.p10k.zsh.bak` 내용 동일 확인
+
+**미실행**: 시스템을 실제로 바꾸는 `-e go`, `-e brew`, `-e awscli`, `-e winpush` 는 실행하지 않았습니다.
+특히 `winpush` 는 Windows 설정을 덮어쓰므로 직접 확인 후 실행하시기 바랍니다(기존 설정은 `.bak` 백업됨).
+
+### 남은 과제
+
+- `setting_mac.sh` 미검증. macOS 장비를 다시 쓰게 되면 검증 후 `setEnv.sh` 로 통합할 것
+- `alias/ubuntu/{puppet,traefik,hipbone}.alias` 의 사내 서버 IP·계정명,
+  `alias/default/tccli.alias` 의 Tencent 계정 UIN이 저장소에 그대로 있음.
+  `/etc/zsh/alias.sh`(git 미관리) 로 옮기는 정리 필요
+- `config/puppet-lint.rc` 는 저장소에만 있고 연동되지 않음

@@ -5,15 +5,19 @@
 # Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2026-01-29                                          #
-# Version      : 1.3                                                 #
+# Last Update  : 2026-08-10                                          #
+# Version      : 2.0                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
 ## 스크립트 이름
 script_name=$(basename "$0")
+## 저장소 루트 (스크립트 위치 기준 - 어디서 실행해도 동작)
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ## 임시 디렉토리
-tmp_dir="tmp"
+tmp_dir="${repo_dir}/tmp"
+## Windows Terminal 패키지 디렉토리 이름
+wt_package="Microsoft.WindowsTerminal_8wekyb3d8bbwe"
 ###################### 1. 변수 선언 - End ############################
 
 ####################### 2. 함수 선언 - Start #########################
@@ -23,18 +27,26 @@ print_help() {
   echo "개발 및 운영 환경 구성 도구"
   echo ""
   echo "Options:"
-  echo "  -h, --help    		도움말 보기"
-  echo "  -e, --env ENVIRONMENT		세팅할 환경"
+  echo "  -h, --help                    도움말 보기"
+  echo "  -e, --env ENVIRONMENT         세팅할 환경"
   echo ""
   echo ""
   echo "지원되는 ENVIRONMENT"
-  echo "  default                       기본 환경을 구성(zsh)"
-  echo "  opentofu                      OpenTofu를 설치하고 구성"
-  echo "  awscli                        aws cli를 설치"
-  echo "  brew                          homebrew 설치"
-  echo "  tccli                         Tencent Cloud CLI를 설치"
-  echo "  coscli                        Tencent Cloud COS CLI를 설치"
-  echo "  go                            Go(golang)를 설치"
+  echo "  [셸 환경]"
+  echo "    default                     기본 환경을 구성(zsh, oh-my-zsh, alias, functions)"
+  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k)"
+  echo ""
+  echo "  [Windows 연동 - WSL 전용]"
+  echo "    winpush                     저장소 설정을 Windows에 배포 (VS Code, Terminal)"
+  echo "    winpull                     Windows 설정을 저장소로 회수"
+  echo ""
+  echo "  [도구 설치]"
+  echo "    opentofu                    OpenTofu를 설치하고 구성"
+  echo "    awscli                      aws cli를 설치"
+  echo "    brew                        homebrew 설치"
+  echo "    tccli                       Tencent Cloud CLI를 설치"
+  echo "    coscli                      Tencent Cloud COS CLI를 설치"
+  echo "    go                          Go(golang)를 설치"
 }
 
 ## OS 정보 가져오기
@@ -52,11 +64,15 @@ get_os() {
 ## 리눅스인지 확인하기
 is_linux() {
   if [[ "$(uname)" == "Linux" ]]; then
-    exit 0
-  else
-    echo >&2 "Linux가 아닙니다."
+    return 0
   fi
+  echo >&2 "Linux가 아닙니다."
+  return 1
+}
 
+## WSL인지 확인하기
+is_wsl() {
+  grep -qi microsoft /proc/version 2>/dev/null
 }
 
 ## 패키지 관리자 가져오기
@@ -69,7 +85,6 @@ get_pkgmanager() {
     echo "지원하지 않는 배포판입니다. : ${OS}"
     ;;
   esac
-
 }
 
 ## 현재 shell 가져오기
@@ -94,7 +109,6 @@ change_zsh() {
   else
       echo "현재 셸은 bash가 아닙니다. 현재 셸: $CURRENT_SHELL"
   fi
-
 }
 
 # 필수 패키지 설치
@@ -102,10 +116,19 @@ requirement_package() {
   $PKG_MANAGER install -y wget curl git zsh bat unzip
 }
 
+# 기존 파일을 백업 (심볼릭 링크는 그냥 덮어씀)
+backup_if_real_file() {
+  local target="$1"
+  if [ -e "${target}" ] && [ ! -L "${target}" ]; then
+    mv "${target}" "${target}.bak"
+    echo "  기존 파일을 백업했습니다: ${target}.bak"
+  fi
+}
+
 # zsh 환경 구성
 set_zsh() {
   ZSH_CUSTOM="${HOME}/.oh-my-zsh/custom"
-  ALIAS_DIR="${PWD}/alias"
+
   # oh-my-zsh 설치
   if [ ! -d "${HOME}/.oh-my-zsh" ]; then
     yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -126,12 +149,134 @@ set_zsh() {
     git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
   fi
 
-  # zsh symlink
+  # zshrc symlink (나머지 홈 링크는 set_dotfiles가 담당)
+  backup_if_real_file "${HOME}/.zshrc"
   ln -fs "${ZSH_FILE}" "${HOME}"/.zshrc
-  ln -fs "${ALIAS_DIR}" "${HOME}"/alias
+  echo "셸 설정을 연결했습니다: ~/.zshrc -> ${ZSH_FILE}"
+}
 
-  # Profile 로드
-  source "${HOME}"/.zshrc
+## 설정 파일을 홈 디렉토리에 심볼릭 링크
+## 저장소가 원본이므로 홈의 파일을 직접 고치지 말 것
+set_dotfiles() {
+  echo "설정 파일을 홈 디렉토리에 연결합니다..."
+
+  # 링크할 대상 : "저장소 경로:홈 경로"
+  local links=(
+    "alias:${HOME}/alias"
+    "functions:${HOME}/functions"
+    "config/tmux.conf:${HOME}/.tmux.conf"
+    "config/vimrc:${HOME}/.vimrc"
+    "config/p10k.zsh:${HOME}/.p10k.zsh"
+  )
+
+  local entry src dest
+  for entry in "${links[@]}"; do
+    src="${repo_dir}/${entry%%:*}"
+    dest="${entry##*:}"
+
+    if [ ! -e "${src}" ]; then
+      echo "  건너뜀 (저장소에 파일 없음): ${src}"
+      continue
+    fi
+
+    backup_if_real_file "${dest}"
+    # -n : dest가 이미 디렉토리 심볼릭 링크일 때 그 안에 중첩 생성되는 것을 방지
+    ln -fsn "${src}" "${dest}"
+    echo "  연결: ${dest} -> ${src}"
+  done
+
+  echo "완료되었습니다."
+  if is_wsl; then
+    echo "VS Code / Windows Terminal 설정은 'setEnv.sh -e winpush' 로 배포하세요."
+  fi
+}
+
+## Windows 사용자 홈 경로 가져오기 (WSL 전용)
+get_win_home() {
+  if ! is_wsl; then
+    echo >&2 "WSL 환경이 아닙니다. Windows 연동은 WSL에서만 동작합니다."
+    return 1
+  fi
+
+  # cmd.exe로 %USERPROFILE%을 물어보고, 실패하면 관례적 경로로 대체
+  WIN_HOME=$(wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r')" 2>/dev/null)
+  if [ -z "${WIN_HOME}" ] || [ ! -d "${WIN_HOME}" ]; then
+    WIN_HOME="/mnt/c/Users/$(whoami)"
+  fi
+
+  if [ ! -d "${WIN_HOME}" ]; then
+    echo >&2 "Windows 사용자 디렉토리를 찾지 못했습니다: ${WIN_HOME}"
+    return 1
+  fi
+  return 0
+}
+
+## Windows 쪽 설정 파일 경로 목록을 구성
+## Windows 파일시스템(drvfs)에는 심볼릭 링크를 걸 수 없으므로 복사로 동기화한다.
+build_win_pairs() {
+  get_win_home || return 1
+
+  WIN_PAIRS=()
+
+  # VS Code (Windows 사용자 설정)
+  local vscode_dest="${WIN_HOME}/AppData/Roaming/Code/User/settings.json"
+  if [ -d "$(dirname "${vscode_dest}")" ]; then
+    WIN_PAIRS+=("config/vscode-settings.json:${vscode_dest}")
+  else
+    echo "  건너뜀 (VS Code 미설치): ${vscode_dest}"
+  fi
+
+  # Windows Terminal
+  local wt_dest="${WIN_HOME}/AppData/Local/Packages/${wt_package}/LocalState/settings.json"
+  if [ -d "$(dirname "${wt_dest}")" ]; then
+    WIN_PAIRS+=("config/wt-settings.json:${wt_dest}")
+  else
+    echo "  건너뜀 (Windows Terminal 미설치): ${wt_dest}"
+  fi
+
+  if [ ${#WIN_PAIRS[@]} -eq 0 ]; then
+    echo "동기화할 대상이 없습니다."
+    return 1
+  fi
+  return 0
+}
+
+## 저장소 설정을 Windows로 배포
+set_winpush() {
+  echo "저장소 설정을 Windows로 배포합니다..."
+  build_win_pairs || return 1
+
+  local entry src dest
+  for entry in "${WIN_PAIRS[@]}"; do
+    src="${repo_dir}/${entry%%:*}"
+    dest="${entry#*:}"
+
+    [ -f "${src}" ] || { echo "  건너뜀 (저장소에 파일 없음): ${src}"; continue; }
+
+    # Windows 쪽 기존 설정을 덮어쓰므로 반드시 백업
+    [ -f "${dest}" ] && cp "${dest}" "${dest}.bak"
+    cp "${src}" "${dest}"
+    echo "  배포: ${src} -> ${dest}"
+  done
+  echo "완료되었습니다. (기존 설정은 .bak으로 백업)"
+}
+
+## Windows 설정을 저장소로 회수
+set_winpull() {
+  echo "Windows 설정을 저장소로 회수합니다..."
+  build_win_pairs || return 1
+
+  local entry src dest
+  for entry in "${WIN_PAIRS[@]}"; do
+    src="${repo_dir}/${entry%%:*}"
+    dest="${entry#*:}"
+
+    [ -f "${dest}" ] || { echo "  건너뜀 (Windows에 파일 없음): ${dest}"; continue; }
+
+    cp "${dest}" "${src}"
+    echo "  회수: ${dest} -> ${src}"
+  done
+  echo "완료되었습니다. git diff로 변경 내용을 확인하고 커밋하세요."
 }
 
 ## OpenTofu 설치 및 구성
@@ -141,12 +286,11 @@ set_opentofu() {
   ubuntu)
     echo "ubuntu 서버에 OpenTofu를 설치 및 구성합니다..."
     echo "제공되는 설치 스크립트를 이용해서 설치합니다."
-    curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o install-opentofu.sh || exit
-    chmod +x install-opentofu.sh
-    ./install-opentofu.sh --install-method deb
-    if [ $? -eq 0 ]; then
-      rm -f install-opentofu.sh
-    fi
+    mkdir -p "$tmp_dir"
+    curl --proto '=https' --tlsv1.2 -fsSL https://get.opentofu.org/install-opentofu.sh -o "${tmp_dir}/install-opentofu.sh" || exit
+    chmod +x "${tmp_dir}/install-opentofu.sh"
+    "${tmp_dir}/install-opentofu.sh" --install-method deb
+    rm -rf "$tmp_dir"
     ;;
   *)
     echo "지원하지 않는 배포판입니다. : ${OS}"
@@ -157,12 +301,18 @@ set_opentofu() {
 ## awscli 설치
 set_awscli() {
   echo "awscli를 설치합니다..."
-  mkdir $tmp_dir
-  cd $tmp_dir || exit
-  curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  unzip awscliv2.zip
-  sudo ./aws/install
-  rm -rf ../$tmp_dir
+  mkdir -p "$tmp_dir"
+  curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "${tmp_dir}/awscliv2.zip" || exit 1
+  unzip -q -o "${tmp_dir}/awscliv2.zip" -d "$tmp_dir"
+  sudo "${tmp_dir}/aws/install" --update
+  rm -rf "$tmp_dir"
+
+  if command -v aws &> /dev/null; then
+    echo "awscli 설치가 완료되었습니다: $(aws --version)"
+  else
+    echo "awscli 설치에 실패했습니다."
+    exit 1
+  fi
 }
 
 ## 기본 환경 구성
@@ -171,11 +321,13 @@ set_default() {
   case ${OS} in
   ubuntu)
     $PKG_MANAGER update -y
+    requirement_package
     sudo test -f /etc/sudoers.d/$USER || echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers.d/$USER
     current_shell
     change_zsh
-    ZSH_FILE="${PWD}/zshrc_ubuntu"
-    set_zsh "${ZSH_FILE}"
+    ZSH_FILE="${repo_dir}/zshrc_ubuntu"
+    set_zsh
+    set_dotfiles
     ;;
   *)
     echo "지원하지 않는 배포판입니다. : ${OS}"
@@ -220,35 +372,36 @@ set_tccli() {
   fi
 }
 
-## coscli(Tencent Cloud COS CLI) 설치
-set_coscli() {
-  echo "Tencent Cloud COS CLI(coscli)를 설치합니다..."
-  mkdir -p $tmp_dir
-  cd $tmp_dir || exit
-
-  # 아키텍처 확인
-  ARCH=$(uname -m)
-  case $ARCH in
+## 아키텍처 확인 - amd64 / arm64 를 ARCH_ALIAS에 설정
+get_arch() {
+  local arch
+  arch=$(uname -m)
+  case $arch in
     x86_64)
-      COSCLI_ARCH="amd64"
+      ARCH_ALIAS="amd64"
       ;;
     aarch64)
-      COSCLI_ARCH="arm64"
+      ARCH_ALIAS="arm64"
       ;;
     *)
-      echo "지원하지 않는 아키텍처입니다: $ARCH"
+      echo "지원하지 않는 아키텍처입니다: $arch"
       exit 1
       ;;
   esac
+}
+
+## coscli(Tencent Cloud COS CLI) 설치
+set_coscli() {
+  echo "Tencent Cloud COS CLI(coscli)를 설치합니다..."
+  get_arch
+  mkdir -p "$tmp_dir"
 
   # coscli 다운로드 및 설치
-  COSCLI_URL="https://cosbrowser.cloud.tencent.com/software/coscli/coscli-linux-${COSCLI_ARCH}"
-  curl -sL "$COSCLI_URL" -o coscli
-  chmod +x coscli
-  sudo mv coscli /usr/local/bin/
-
-  cd ..
-  rm -rf $tmp_dir
+  COSCLI_URL="https://cosbrowser.cloud.tencent.com/software/coscli/coscli-linux-${ARCH_ALIAS}"
+  curl -fsSL "$COSCLI_URL" -o "${tmp_dir}/coscli" || exit 1
+  chmod +x "${tmp_dir}/coscli"
+  sudo mv "${tmp_dir}/coscli" /usr/local/bin/
+  rm -rf "$tmp_dir"
 
   if command -v coscli &> /dev/null; then
     echo "coscli 설치가 완료되었습니다."
@@ -262,21 +415,7 @@ set_coscli() {
 ## go(golang) 설치 - 공식 바이너리를 /usr/local/go에 설치
 set_go() {
   echo "Go(golang)를 설치합니다..."
-
-  # 아키텍처 확인
-  ARCH=$(uname -m)
-  case $ARCH in
-    x86_64)
-      GO_ARCH="amd64"
-      ;;
-    aarch64)
-      GO_ARCH="arm64"
-      ;;
-    *)
-      echo "지원하지 않는 아키텍처입니다: $ARCH"
-      exit 1
-      ;;
-  esac
+  get_arch
 
   # 최신 안정 버전 조회 (예: go1.22.0)
   GO_VERSION=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n 1)
@@ -284,20 +423,17 @@ set_go() {
     echo "Go 최신 버전 정보를 가져오지 못했습니다."
     exit 1
   fi
-  echo "설치할 버전: ${GO_VERSION} (${GO_ARCH})"
+  echo "설치할 버전: ${GO_VERSION} (${ARCH_ALIAS})"
 
-  mkdir -p $tmp_dir
-  cd $tmp_dir || exit
+  mkdir -p "$tmp_dir"
 
   # 공식 바이너리 다운로드 및 설치
-  GO_TARBALL="${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
-  curl -fsSL "https://go.dev/dl/${GO_TARBALL}" -o "$GO_TARBALL"
+  GO_TARBALL="${GO_VERSION}.linux-${ARCH_ALIAS}.tar.gz"
+  curl -fsSL "https://go.dev/dl/${GO_TARBALL}" -o "${tmp_dir}/${GO_TARBALL}" || exit 1
   # 기존 설치를 제거한 뒤 새로 압축 해제 (공식 권장 방식)
   sudo rm -rf /usr/local/go
-  sudo tar -C /usr/local -xzf "$GO_TARBALL"
-
-  cd ..
-  rm -rf $tmp_dir
+  sudo tar -C /usr/local -xzf "${tmp_dir}/${GO_TARBALL}"
+  rm -rf "$tmp_dir"
 
   if /usr/local/go/bin/go version &> /dev/null; then
     echo "Go 설치가 완료되었습니다: $(/usr/local/go/bin/go version)"
@@ -311,51 +447,46 @@ set_go() {
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
-  opentofu)
-    echo "openTofu 개발 환경을 구성하는 중입니다..."
-    set_opentofu "${OS}"
-    ;;
   default)
     echo "기본 환경을 구성하는 중입니다..."
-    set_default "${OS}"
+    set_default
     ;;
-  production)
-    echo "Configuring production environment..."
-    # 여기에 운영 환경을 구성하는 작업 추가
+  dotfiles)
+    is_linux && set_dotfiles
+    ;;
+  winpush)
+    set_winpush
+    ;;
+  winpull)
+    set_winpull
+    ;;
+  opentofu)
+    echo "openTofu 개발 환경을 구성하는 중입니다..."
+    set_opentofu
     ;;
   awscli)
     echo "AWS CLI를 설치하는 중입니다..."
-    # 플랫폼 확인
-    if $(is_linux); then
-      set_awscli
-    fi
+    is_linux && set_awscli
     ;;
   brew)
     echo "Homebrew를 설치하는 중입니다..."
-    if $(is_linux); then
-      set_brew
-    fi
+    is_linux && set_brew
     ;;
   tccli)
     echo "Tencent Cloud CLI를 설치하는 중입니다..."
-    if $(is_linux); then
-      set_tccli
-    fi
+    is_linux && set_tccli
     ;;
   coscli)
     echo "Tencent Cloud COS CLI를 설치하는 중입니다..."
-    if $(is_linux); then
-      set_coscli
-    fi
+    is_linux && set_coscli
     ;;
   go)
     echo "Go(golang)를 설치하는 중입니다..."
-    if $(is_linux); then
-      set_go
-    fi
+    is_linux && set_go
     ;;
   *)
     echo "알 수 없는 환경: $1"
+    print_help
     exit 1
     ;;
   esac
@@ -401,10 +532,9 @@ if [ -z "$environment" ]; then
   exit 1
 fi
 
-# 공통 함수 실행
+# 공통 정보 수집
 get_os
 get_pkgmanager
-requirement_package "${PKG_MANAGER}"
 
 ## 특정 환경 구성
 configure_environment "$environment"
