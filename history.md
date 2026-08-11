@@ -5,6 +5,71 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-08-11 — Python 환경 관리 추가 (uv)
+
+### 배경
+
+Python 환경 관리 수단이 저장소에 전혀 없었습니다. 시스템 `python3`(apt 3.12.3)와
+tccli 설치용 pipx만 있는 상태여서, 새 장비에서 Python 작업을 시작하려면 매번 수동 구성이 필요했습니다.
+
+도구는 **uv**로 정했습니다. 버전 관리(pyenv) + 가상환경(venv) + 의존성(pip/poetry) +
+일회성 도구 실행(pipx)을 하나로 대체할 수 있어, 관리 대상을 늘리지 않고 기능을 얻을 수 있습니다.
+
+### 추가한 것
+
+**`setEnv.sh -e uv`** — `set_uv()` 신규
+
+1. uv / uvx 설치 (`~/.local/bin`). 이미 있으면 `uv self update` 로 갱신
+2. zsh 자동완성 생성 → `~/.zfunc/_uv`, `~/.zfunc/_uvx`
+   (`zshrc_ubuntu` 가 이미 `fpath+=~/.zfunc` 를 하고 있어 별도 설정 불필요.
+   기존 `_ops-hub` 자동완성과 같은 방식)
+3. uv가 관리하는 최신 Python 설치 (`uv python install`)
+
+**핵심 결정 — 설치 스크립트의 셸 프로필 수정 차단**
+
+uv 설치 스크립트는 기본적으로 `~/.zshrc` 에 PATH 줄을 직접 추가합니다.
+`zshrc_ubuntu` 는 git으로 관리되는 심볼릭 링크 원본이므로 그대로 두면 저장소와 실제 설정이 갈라집니다.
+`INSTALLER_NO_MODIFY_PATH=1` 로 막고, `~/.local/bin` 은 기존처럼 zshrc에서 조건부로 추가합니다.
+tccli 설치 때 `pipx ensurepath` 를 쓰지 않은 것과 같은 이유이며, 이 방침을 `CLAUDE.md` 에
+"언어 런타임 관리 방침" 으로 명문화했습니다.
+
+**`alias/default/uv.alias`** — `command -v uv` 가드 안에 정의
+`uvi`, `uvs`, `uvr`, `uva`, `uvad`, `uvrm`, `uvl`, `uvtree`, `uvpy`, `uvpyi`, `uvv`, `uvt`, `uvtl`
+
+**`functions/python.zsh`** — 셸에서 직접 `python`/`pytest` 를 써야 할 때를 위한 helper
+
+| 함수 | 설명 |
+| --- | --- |
+| `uvon` | 상위 경로를 거슬러 올라가며 `.venv` 를 찾아 활성화 |
+| `uvoff` | 비활성화 (활성 환경이 없으면 그렇다고 알림) |
+| `uvinfo` | uv 버전 / 활성 가상환경 / python 경로·버전 / 프로젝트 위치 |
+
+평소에는 `uv run` 이 활성화 없이 동작하므로 그쪽이 낫습니다. helper는 보조 수단입니다.
+
+### 방침
+
+- **Python은 uv로 통일합니다.** pyenv, poetry, virtualenv 를 새로 들이지 않습니다.
+- 기존 pipx 는 tccli 설치 전용으로만 유지합니다 (제거하지 않음).
+- 시스템 `python3`(apt)는 건드리지 않습니다. OS 도구들이 의존하고 있습니다.
+  uv가 설치하는 Python은 `~/.local/share/uv/python/` 아래에 격리됩니다.
+
+### 검증 내역
+
+- `bash setEnv.sh -e uv` **실제 실행** — uv 0.12.3 설치, CPython 3.14.7 설치, 자동완성 2개 생성 확인
+- **셸 프로필 오염 없음 확인** — `git diff zshrc_ubuntu` 변화 없음,
+  `~/.profile` 은 2024-08-20 mtime 그대로(Ubuntu 기본 `~/.local/bin` 블록이며 uv 흔적 없음)
+- 실제 프로젝트로 `uv init` → `uv add requests` → `uvon` → `uvinfo` → `uvoff` 전 과정 확인
+- alias 로드 확인 (`uvs`, `uva`, `uvpy`)
+
+**작업 중 발견해 수정한 것**
+
+- `uvinfo` 가 `python` 없이 `python3` 만 있는 장비에서 `command not found` 를 출력에 섞어 찍었습니다.
+  `command -v` 로 먼저 찾은 뒤 그 경로로 `--version` 을 호출하도록 수정했습니다.
+- `functions/common.zsh` 의 `up` 이 실패 메시지를 stdout으로 보내고 있어
+  명령 치환으로 값을 받는 쪽이 오염됐습니다. stderr로 변경했습니다.
+
+---
+
 ## 2026-08-10 — 저장소 구조 전면 정리
 
 ### 배경

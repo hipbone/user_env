@@ -38,6 +38,6 @@ up() {
     [[ -e "$dir/$1" ]] && { echo "$dir/$1"; return 0; }
     dir="$(dirname "$dir")"
   done
-  echo "찾지 못했습니다: $1"
+  echo >&2 "찾지 못했습니다: $1"
   return 1
 }

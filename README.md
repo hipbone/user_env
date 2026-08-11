@@ -65,6 +65,7 @@ bash setEnv.sh -h             # 도움말
 | `tccli` | Tencent Cloud CLI 설치 (pipx 기반 격리 환경) |
 | `coscli` | Tencent Cloud COS CLI 설치 |
 | `go` | Go(golang) 공식 바이너리 설치 (`/usr/local/go`) |
+| `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
 
 `default` 실행 시 동작:
 
@@ -79,6 +80,50 @@ bash setEnv.sh -h             # 도움말
 > 참고: tccli는 PEP 668 문제를 피하기 위해 pipx로 설치하며, `~/.local/bin`은
 > zshrc에서 조건부로 PATH에 추가됩니다 (`pipx ensurepath`를 쓰지 않음).
 > 설치 후 `tccli configure` / `coscli config`로 인증 정보를 설정하세요.
+
+## Python 환경 (uv)
+
+Python 버전 관리, 가상환경, 의존성 관리를 [uv](https://docs.astral.sh/uv/) 하나로 처리합니다.
+시스템 `python3`(apt)는 건드리지 않으며, uv가 관리하는 Python은 `~/.local/share/uv` 아래에 격리됩니다.
+
+```bash
+bash setEnv.sh -e uv
+```
+
+설치 시 함께 처리되는 것:
+
+1. uv / uvx 설치 (`~/.local/bin`)
+2. zsh 자동완성 생성 (`~/.zfunc/_uv`, `~/.zfunc/_uvx`)
+3. uv가 관리하는 최신 Python 설치
+
+이미 설치되어 있으면 `uv self update` 로 갱신합니다.
+
+### 기본 사용
+
+```bash
+uv init myproject      # 새 프로젝트
+uv add requests        # 의존성 추가
+uv sync                # pyproject.toml/uv.lock 기준 환경 동기화
+uv run python main.py  # 활성화 없이 프로젝트 환경에서 실행
+uvx ruff check         # 설치 없이 일회성 도구 실행
+uv python install 3.12 # 특정 Python 버전 설치
+```
+
+### helper 함수
+
+셸에서 직접 `python` / `pytest` 를 두드려야 할 때만 씁니다. 평소에는 `uv run` 이 낫습니다.
+
+| 함수 | 설명 |
+| --- | --- |
+| `uvon` | 상위 경로에서 `.venv` 를 찾아 활성화 |
+| `uvoff` | 비활성화 |
+| `uvinfo` | uv 버전, 활성 가상환경, python 경로·버전, 프로젝트 위치를 한눈에 |
+
+alias는 `alias/default/uv.alias` 를 참고하세요 (`uvs`, `uva`, `uvr`, `uvpy` 등).
+
+> uv 설치 스크립트는 기본적으로 `~/.zshrc` 에 PATH를 직접 추가하는데,
+> zshrc는 git으로 관리되므로 `INSTALLER_NO_MODIFY_PATH=1` 로 이를 막습니다.
+> `~/.local/bin` 은 zshrc에서 조건부로 PATH에 추가됩니다 (tccli/pipx와 같은 방식).
 
 ## 설정 파일 연동 방식
 
@@ -126,7 +171,8 @@ alias/
 └── ubuntu/    # sudo, terraform, terragrunt, puppet, traefik, hipbone
 
 functions/
-└── common.zsh # mkcd, extract, path, up
+├── common.zsh # mkcd, extract, path, up
+└── python.zsh # uvon, uvoff, uvinfo
 ```
 
 - 한 줄 치환이면 `alias/`, 인자 처리나 분기가 필요하면 `functions/`

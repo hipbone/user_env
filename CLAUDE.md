@@ -115,6 +115,8 @@ user_env/
 │   ├── default/                  #   모든 OS 공통
 │   └── ubuntu/                   #   Ubuntu 전용
 ├── functions/                    # → ~/functions (helper 함수)
+│   ├── common.zsh                #   mkcd, extract, path, up
+│   └── python.zsh                #   uvon, uvoff, uvinfo
 │
 ├── config/
 │   ├── p10k.zsh                  # → ~/.p10k.zsh   (프롬프트 동일성)
@@ -156,8 +158,33 @@ bash setEnv.sh -e winpush      # 저장소 → Windows
 bash setEnv.sh -e winpull      # Windows → 저장소
 
 # 도구 설치
-bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go
+bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv
 ```
+
+### 언어 런타임 관리 방침
+
+| 언어 | 관리 도구 | 설치 위치 |
+| --- | --- | --- |
+| Python | **uv** (`-e uv`) | `~/.local/bin`, 런타임은 `~/.local/share/uv` |
+| Go | 공식 바이너리 (`-e go`) | `/usr/local/go` |
+| Node | nvm (수동) | `~/.nvm` |
+| Ruby | rbenv (수동) | `~/.rbenv` |
+
+- **Python은 uv로 통일한다.** pyenv, poetry, virtualenv, `pip install --user` 를 새로 들이지 않는다.
+  이미 있는 pipx는 tccli 설치 전용으로만 유지한다.
+- 시스템 패키지(apt)로 설치된 `python3` 는 건드리지 않는다. OS 도구들이 의존하고 있다.
+- **설치 스크립트가 셸 프로필을 수정하게 두지 않는다.** `zshrc_*` 는 git으로 관리되므로
+  설치 도구가 PATH 줄을 밀어 넣으면 저장소와 실제 설정이 갈라진다.
+  각 도구의 억제 옵션을 쓰고, PATH는 `zshrc_*` 에 조건부로 직접 적는다.
+
+  ```bash
+  # uv
+  curl -fsSL https://astral.sh/uv/install.sh | env INSTALLER_NO_MODIFY_PATH=1 sh
+  # pipx : ensurepath를 호출하지 않는다
+  ```
+
+- CLI 도구의 zsh 자동완성은 `~/.zfunc/_<도구>` 로 생성한다
+  (`zshrc_*` 가 `fpath+=~/.zfunc` 로 이미 등록하고 있음).
 
 ### 내부 구조 (파일 내 섹션 주석 유지)
 

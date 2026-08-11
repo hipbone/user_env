@@ -5,7 +5,7 @@
 # Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2026-08-10                                          #
+# Last Update  : 2026-08-11                                          #
 # Version      : 2.0                                                 #
 ######################################################################
 
@@ -47,6 +47,7 @@ print_help() {
   echo "    tccli                       Tencent Cloud CLI를 설치"
   echo "    coscli                      Tencent Cloud COS CLI를 설치"
   echo "    go                          Go(golang)를 설치"
+  echo "    uv                          uv(Python 패키지·버전 관리자)를 설치"
 }
 
 ## OS 정보 가져오기
@@ -444,6 +445,48 @@ set_go() {
   fi
 }
 
+## uv(Python 패키지·프로젝트 관리자) 설치
+## Python 버전 설치, 가상환경, 의존성 관리를 uv 하나로 처리한다.
+## 시스템 python3(apt)는 건드리지 않는다 - uv가 관리하는 Python은 ~/.local/share/uv 아래에 격리된다.
+set_uv() {
+  echo "uv를 설치합니다..."
+
+  if command -v uv &> /dev/null; then
+    echo "uv가 이미 설치되어 있습니다: $(uv --version)"
+    echo "최신 버전으로 갱신합니다."
+    uv self update
+  else
+    # INSTALLER_NO_MODIFY_PATH=1 로 설치 스크립트가 셸 프로필을 수정하지 못하게 막는다.
+    # - 설치 스크립트는 ~/.zshrc에 PATH를 직접 추가하는데, zshrc는 git으로 관리되므로 부적합
+    # - ~/.local/bin은 zshrc에서 조건부로 PATH에 추가하고 있음 (tccli/pipx와 동일한 방식)
+    curl -fsSL https://astral.sh/uv/install.sh | env INSTALLER_NO_MODIFY_PATH=1 sh || exit 1
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+
+  if ! command -v uv &> /dev/null; then
+    echo "uv 설치에 실패했습니다."
+    exit 1
+  fi
+
+  # zsh 자동완성 생성 (~/.zfunc 는 zshrc에서 fpath에 추가됨)
+  mkdir -p "${HOME}/.zfunc"
+  uv generate-shell-completion zsh > "${HOME}/.zfunc/_uv"
+  uvx --generate-shell-completion zsh > "${HOME}/.zfunc/_uvx"
+  echo "zsh 자동완성을 생성했습니다: ~/.zfunc/_uv, ~/.zfunc/_uvx"
+
+  # uv가 관리하는 최신 Python 설치
+  echo "최신 Python을 설치합니다..."
+  uv python install
+
+  echo ""
+  echo "uv 설치가 완료되었습니다: $(uv --version)"
+  echo "  uv python list       설치된/설치 가능한 Python 확인"
+  echo "  uv init <프로젝트>    새 프로젝트 생성"
+  echo "  uv sync              pyproject.toml 기준으로 의존성 동기화"
+  echo "  uvx <도구>            설치 없이 CLI 도구 실행"
+  echo "자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
+}
+
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
@@ -483,6 +526,10 @@ configure_environment() {
   go)
     echo "Go(golang)를 설치하는 중입니다..."
     is_linux && set_go
+    ;;
+  uv)
+    echo "uv(Python 환경 관리자)를 설치하는 중입니다..."
+    is_linux && set_uv
     ;;
   *)
     echo "알 수 없는 환경: $1"
