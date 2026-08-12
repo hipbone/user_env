@@ -109,6 +109,63 @@ uvx ruff check         # 설치 없이 일회성 도구 실행
 uv python install 3.12 # 특정 Python 버전 설치
 ```
 
+### 기존 venv 방식에서 옮기기
+
+기존에 쓰던 방식을 그대로 유지하려면 명령어만 1:1로 바꾸면 됩니다.
+
+| 기존 | uv |
+| --- | --- |
+| `python3.12 -m venv venv` | `uv venv --python 3.12` |
+| `source venv/bin/activate` | `source .venv/bin/activate` |
+| `pip install -r requirements.txt` | `uv pip install -r requirements.txt` |
+| `pip install requests` | `uv pip install requests` |
+| `pip freeze > requirements.txt` | `uv pip freeze > requirements.txt` |
+
+주의할 점:
+
+- **가상환경 디렉토리 이름이 `.venv` 가 기본입니다.** `uv venv venv` 로 옛 이름을 쓸 수도 있지만
+  `.venv` 를 권장합니다. `uv run`, `uv pip`, `uvon` 이 모두 `.venv` 를 자동으로 찾습니다.
+- **없는 Python 버전을 지정해도 uv가 자동으로 받아옵니다.** `uv venv --python 3.11` 을 하면
+  시스템에 3.11이 없어도 uv가 내려받아 사용합니다. apt로 미리 설치해 둘 필요가 없습니다.
+- **활성화가 사실상 필요 없습니다.** `uv pip install` 과 `uv run` 은 현재 디렉토리의 `.venv` 를
+  자동으로 인식합니다.
+
+  ```bash
+  uv venv                              # 만들고
+  uv pip install -r requirements.txt   # activate 없이 설치
+  uv run python main.py                # activate 없이 실행
+  ```
+
+### 프로젝트 방식으로 전환 (권장)
+
+본인이 관리하는 프로젝트라면 `requirements.txt` 대신 `pyproject.toml` + `uv.lock` 을 쓰는 편이 낫습니다.
+`uv.lock` 은 전이 의존성까지 해시로 고정하므로, `requirements.txt` 의 `requests>=2.31` 처럼
+장비마다 다른 버전이 깔리는 일이 없습니다.
+
+```bash
+# 기존 requirements.txt 를 옮기기
+uv init .
+uv add -r requirements.txt      # pyproject.toml + uv.lock 생성
+rm requirements.txt
+
+# 이후 사용
+uv add requests                 # 의존성 추가
+uv add --dev pytest ruff        # 개발 의존성
+uv run python main.py           # 활성화 없이 실행
+```
+
+다른 장비에서 환경을 재현할 때는 한 줄이면 됩니다.
+`uv sync` 가 가상환경 생성, Python 버전 확보, 의존성 설치를 모두 처리합니다.
+
+```bash
+uv sync
+```
+
+| 상황 | 권장 방식 |
+| --- | --- |
+| 남의 저장소, 스크립트 몇 개, 임시 환경 | 기존 방식 유지 (`uv venv` + `uv pip`) |
+| 본인이 관리하고 여러 장비에서 재현해야 하는 프로젝트 | 프로젝트 방식 (`uv init` + `uv sync`) |
+
 ### helper 함수
 
 셸에서 직접 `python` / `pytest` 를 두드려야 할 때만 씁니다. 평소에는 `uv run` 이 낫습니다.
