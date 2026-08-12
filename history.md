@@ -5,6 +5,73 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-08-12 — tccli 운영 구성 정비 (pipx → uv tool, helper 함수, 역할 ARN 외부화)
+
+### 배경
+
+tccli는 설치 스크립트만 있고 운영에 필요한 나머지가 비어 있었습니다.
+프로필이 6개(`default`, `hive-live`, `hive-sandbox`, `hive-test`, `iep-rnd` 등) 있는데 전환 수단이 없었고,
+자동완성도 연결되어 있지 않았으며, alias는 역할 전환 두 개뿐이었습니다.
+
+### 설치 방식: pipx → uv tool
+
+pipx를 apt로 깔고 그 위에 tccli를 얹는 구조였습니다. uv 도입 시점(2026-08-11)에는
+"이미 있는 pipx는 tccli 전용으로 유지"하기로 했지만, 그러면 Python 도구 설치 경로가 둘로 남습니다.
+
+`uv tool install tccli` 로 통일했습니다.
+
+- uv가 자체 Python을 쓰므로 시스템 `python3` 나 PEP 668과 무관해집니다 (pipx를 쓴 원래 이유가 사라짐).
+- 관리 대상이 하나 줄고, 갱신도 `uv tool upgrade tccli` 로 uv 체계 안에서 처리됩니다.
+- `set_tccli` 는 pipx로 설치된 기존 tccli를 감지하면 제거한 뒤 이전합니다.
+  `~/.local/bin/tccli` 가 pipx 링크로 남아 있으면 `uv tool install` 이 실패하기 때문입니다.
+- uv가 없으면 `set_uv` 를 먼저 호출합니다.
+
+### 역할 ARN을 저장소 밖으로
+
+`alias/default/tccli.alias` 의 `tc-hive-test` / `tc-hive-sandbox` 에 Tencent 계정 UIN이 박혀 있었습니다
+(CLAUDE.md §7의 "사내 정보 하드코딩" 과제). ARN을 `~/.env_vars` 의 `TC_ROLE_<대문자별칭>` 으로 옮기고,
+`tc-assume` 이 별칭을 그 환경변수로 해석하도록 했습니다. 기존 alias 두 개는 `tc-assume` 호출로 남겨
+이름은 그대로 쓸 수 있게 했습니다.
+
+**주의**: `~/.env_vars` 에 `TC_ROLE_HIVE_TEST` / `TC_ROLE_HIVE_SANDBOX` 를 정의하기 전까지
+두 alias는 "역할 별칭을 찾을 수 없습니다" 안내를 출력합니다. 이전 ARN 값은 `git log -p` 로 확인할 수 있습니다.
+
+### 자격증명 우선순위 (조사 결과)
+
+tccli 3.1.39 소스(`services/*/[service]_client.py` 의 `parse_global_arg`)를 확인한 결과:
+
+1. 명령에 `--profile` 을 직접 붙이면 그 프로필 파일만 사용 (환경변수 무시)
+2. 그렇지 않고 `TENCENTCLOUD_SECRET_ID/KEY` 가 있으면 그것이 우선 — `TCCLI_PROFILE` 보다 위
+3. 나머지는 `TCCLI_PROFILE`(기본 `default`) 프로필 파일
+
+즉 `~/.env_vars` 에 정적 키가 export되어 있으면 프로필을 바꿔도 키는 바뀌지 않습니다.
+이 함정 때문에 helper를 다음과 같이 설계했습니다.
+
+- `tc-assume` 은 `--profile` 을 명시해 호출한다 (환경변수에 남은 키가 끼어들지 않도록).
+- `tc-assume` 은 원래 있던 정적 키를 보관하고, `tc-unassume` 이 그것을 복구한다.
+  `tc-unassume` 은 `tc-assume` 으로 전환한 경우에만 동작한다 — 그렇지 않으면 `~/.env_vars` 의
+  정적 키를 실수로 날리게 된다.
+- `tc-use` 는 정적 키가 남아 있으면 경고한다. `tc-env` 는 지금 실제로 무엇이 쓰이는지 표시한다.
+
+### 그 외
+
+- 자동완성: tccli는 zsh 완성 스크립트 없이 `tccli_completer`(bash 형식)만 제공하므로
+  `~/.zfunc` 방식이 통하지 않습니다. `zshrc_ubuntu` / `zshrc_mac` 의 자동완성 섹션에서
+  `bashcompinit` + `complete -C` 로 조건부 연결했습니다.
+- `requirement_package` 에 `jq` 추가 — `tc-assume` 이 AssumeRole 응답 파싱에 씁니다.
+- `alias/default/coscli.alias` 신규 (`cos-` 접두어).
+- `zshrc_mac` 에 PATH 섹션 추가 — `~/.local/bin` 이 없어 uv/tccli가 잡히지 않는 상태였습니다.
+- alias의 조회 명령은 `--filter`(JMESPath)로 컬럼을 추린 형태로 작성했습니다.
+  응답 필드명은 SDK 모델(`tencentcloud/{cvm,vpc,clb}/v*/models.py`)에서 확인했습니다.
+
+### 검증한 것 / 안 한 것
+
+- 검증: `bash -n setEnv.sh`, `zsh -n` (zshrc 2종, tencent.zsh, alias 2종),
+  `tc-profiles` / `tc-use` / `tc-env` / `tc-unassume` 실제 실행,
+  `tc-assume` 은 tccli를 가짜 응답으로 대체해 파싱·복구·실패 경로 확인
+- **검증 안 함**: `bash setEnv.sh -e tccli` 실제 실행(pipx → uv tool 이전),
+  실제 API를 호출하는 `tc-assume` / 조회 alias, tccli 자동완성 동작, macOS 전반
+
 ## 2026-08-11 — Python 환경 관리 추가 (uv)
 
 ### 배경

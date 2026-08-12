@@ -6,7 +6,7 @@
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
 # Last Update  : 2026-08-11                                          #
-# Version      : 2.0                                                 #
+# Version      : 2.1                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -44,7 +44,7 @@ print_help() {
   echo "    opentofu                    OpenTofu를 설치하고 구성"
   echo "    awscli                      aws cli를 설치"
   echo "    brew                        homebrew 설치"
-  echo "    tccli                       Tencent Cloud CLI를 설치"
+  echo "    tccli                       Tencent Cloud CLI를 설치 (uv tool 기반)"
   echo "    coscli                      Tencent Cloud COS CLI를 설치"
   echo "    go                          Go(golang)를 설치"
   echo "    uv                          uv(Python 패키지·버전 관리자)를 설치"
@@ -114,7 +114,8 @@ change_zsh() {
 
 # 필수 패키지 설치
 requirement_package() {
-  $PKG_MANAGER install -y wget curl git zsh bat unzip
+  # jq: 클라우드 CLI 출력 파싱에 사용 (functions/tencent.zsh 의 tc-assume 등이 의존)
+  $PKG_MANAGER install -y wget curl git zsh bat unzip jq
 }
 
 # 기존 파일을 백업 (심볼릭 링크는 그냥 덮어씀)
@@ -348,29 +349,48 @@ set_brew() {
   fi
 }
 
-## tccli(Tencent Cloud CLI) 설치 - pipx를 사용하여 격리된 환경에 설치
+## tccli(Tencent Cloud CLI) 설치 - uv tool로 격리된 환경에 설치
+## Python 도구 설치는 uv로 통일한다 (pipx를 별도로 유지하지 않기 위함).
+## - uv가 자체 Python을 쓰므로 시스템 python3 / PEP 668 문제와 무관하다.
+## - 실행 파일(tccli, tccli_completer)은 ~/.local/bin 에 노출된다.
 set_tccli() {
   echo "Tencent Cloud CLI(tccli)를 설치합니다..."
 
-  # pipx 설치 확인 및 설치 (apt로 설치하여 PEP 668 문제 회피)
-  if ! command -v pipx &> /dev/null; then
-    echo "pipx가 설치되어 있지 않습니다. pipx를 설치합니다."
-    $PKG_MANAGER install -y pipx
-    # pipx ensurepath는 사용하지 않음
-    # - ensurepath는 zshrc를 직접 수정하는데, zshrc는 git으로 관리되므로 부적합
-    # - 대신 zshrc에서 ~/.local/bin을 조건부로 PATH에 추가하도록 설정함
-    export PATH="$HOME/.local/bin:$PATH"
+  # uv가 없으면 먼저 설치한다 (tccli는 uv tool로 관리)
+  if ! command -v uv &> /dev/null; then
+    echo "uv가 설치되어 있지 않습니다. uv를 먼저 설치합니다."
+    set_uv
   fi
 
-  # tccli 설치 (pipx를 통해 격리된 가상환경에 설치)
-  pipx install tccli
-  if [ $? -eq 0 ]; then
-    echo "tccli 설치가 완료되었습니다."
-    echo "tccli configure 명령으로 인증 정보를 설정하세요."
+  # 과거 pipx로 설치한 tccli가 있으면 제거한다.
+  # ~/.local/bin/tccli 가 pipx 링크로 남아 있으면 uv tool install이 실패하기 때문.
+  if command -v pipx &> /dev/null && pipx list --short 2>/dev/null | grep -q '^tccli '; then
+    echo "pipx로 설치된 기존 tccli를 제거합니다. (uv tool로 이전)"
+    pipx uninstall tccli
+  fi
+
+  if uv tool list 2>/dev/null | grep -q '^tccli '; then
+    echo "tccli가 이미 설치되어 있습니다. 최신 버전으로 갱신합니다."
+    uv tool upgrade tccli || exit 1
   else
+    uv tool install tccli || exit 1
+  fi
+
+  if ! command -v tccli &> /dev/null; then
     echo "tccli 설치에 실패했습니다."
     exit 1
   fi
+
+  # 자동완성은 tccli가 제공하는 tccli_completer(bash 형식)를 zshrc에서 연결한다.
+  echo ""
+  echo "tccli 설치가 완료되었습니다: $(tccli --version 2>&1 | head -n 1)"
+  echo "  tccli configure --profile <이름>   프로필별 인증 정보 설정"
+  echo "  tc-profiles                        프로필 목록 확인"
+  echo "  tc-use <프로필>                    사용할 프로필 전환"
+  echo "  tc-assume <역할별칭>               역할 전환(AssumeRole) 후 임시 자격증명 export"
+  echo "  tc-env                             현재 프로필·리전·역할 상태 확인"
+  echo "역할 별칭은 ~/.env_vars 에 TC_ROLE_<대문자별칭> 형태로 정의하세요."
+  echo "자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
 }
 
 ## 아키텍처 확인 - amd64 / arm64 를 ARCH_ALIAS에 설정

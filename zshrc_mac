@@ -58,8 +58,20 @@ export CLICOLOR=1
 LSCOLORS=Gxfxcxdxbxegedabagacad
 
 # ---------------------------------------------------------------- #
+# PATH
+# ---------------------------------------------------------------- #
+# uv / uv tool 설치 도구 (uv, uvx, tccli 등)
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+
+# ---------------------------------------------------------------- #
 # 자동완성
 # ---------------------------------------------------------------- #
 fpath+=~/.zfunc
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
+
+# tccli — zsh용 완성 스크립트가 없고 bash 형식 completer만 제공하므로 bashcompinit로 연결
+if command -v tccli_completer &>/dev/null; then
+  autoload -Uz bashcompinit && bashcompinit
+  complete -C tccli_completer tccli
+fi

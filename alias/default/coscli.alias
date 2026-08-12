@@ -1,0 +1,15 @@
+# coscli - Tencent Cloud COS CLI 단축 별칭 (prefix: cos-)
+# 전제: coscli 가 PATH에 있어야 함 (bash setEnv.sh -e coscli)
+#       버킷 별칭·인증 정보는 ~/.cos.yaml 에 둔다 (coscli config add / coscli config show)
+#
+# 경로 표기는 cos://<버킷별칭>/<접두어> 형식이다.
+#   예: cos-ls cos://iep-backup/daily/
+
+if command -v coscli &> /dev/null; then
+  alias cos-cfg='coscli config show'          # 설정된 버킷·엔드포인트 확인
+  alias cos-ls='coscli ls'                    # 객체 목록
+  alias cos-du='coscli du'                    # 용량 집계
+  alias cos-cp='coscli cp'                    # 업로드/다운로드 (예: cos-cp ./a.tar cos://버킷/)
+  alias cos-sync='coscli sync'                # 디렉토리 동기화
+  alias cos-url='coscli signurl'              # 서명된 임시 URL 발급
+fi

@@ -116,7 +116,8 @@ user_env/
 │   └── ubuntu/                   #   Ubuntu 전용
 ├── functions/                    # → ~/functions (helper 함수)
 │   ├── common.zsh                #   mkcd, extract, path, up
-│   └── python.zsh                #   uvon, uvoff, uvinfo
+│   ├── python.zsh                #   uvon, uvoff, uvinfo
+│   └── tencent.zsh               #   tc-profiles, tc-use, tc-assume, tc-unassume, tc-env
 │
 ├── config/
 │   ├── p10k.zsh                  # → ~/.p10k.zsh   (프롬프트 동일성)
@@ -170,8 +171,8 @@ bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv
 | Node | nvm (수동) | `~/.nvm` |
 | Ruby | rbenv (수동) | `~/.rbenv` |
 
-- **Python은 uv로 통일한다.** pyenv, poetry, virtualenv, `pip install --user` 를 새로 들이지 않는다.
-  이미 있는 pipx는 tccli 설치 전용으로만 유지한다.
+- **Python은 uv로 통일한다.** pyenv, poetry, virtualenv, `pip install --user`, pipx 를 들이지 않는다.
+  Python으로 만들어진 CLI(tccli 등)는 `uv tool install <도구>` 로 설치한다.
 - 시스템 패키지(apt)로 설치된 `python3` 는 건드리지 않는다. OS 도구들이 의존하고 있다.
 - **설치 스크립트가 셸 프로필을 수정하게 두지 않는다.** `zshrc_*` 는 git으로 관리되므로
   설치 도구가 PATH 줄을 밀어 넣으면 저장소와 실제 설정이 갈라진다.
@@ -180,11 +181,12 @@ bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv
   ```bash
   # uv
   curl -fsSL https://astral.sh/uv/install.sh | env INSTALLER_NO_MODIFY_PATH=1 sh
-  # pipx : ensurepath를 호출하지 않는다
   ```
 
 - CLI 도구의 zsh 자동완성은 `~/.zfunc/_<도구>` 로 생성한다
   (`zshrc_*` 가 `fpath+=~/.zfunc` 로 이미 등록하고 있음).
+  zsh용 완성 스크립트가 없고 bash 형식 completer만 제공하는 도구(tccli)는
+  `zshrc_*` 의 자동완성 섹션에서 `bashcompinit` + `complete -C` 로 **조건부** 연결한다.
 
 ### 내부 구조 (파일 내 섹션 주석 유지)
 
@@ -249,9 +251,11 @@ Main 흐름: `get_os` → `get_pkgmanager` → `configure_environment "$environm
   ```
 - 접두어로 네임스페이스를 만든다 (`oh-` = ops-hub, `tc-` = tencent, `k` = kubectl).
 
-> ⚠️ **현재 `alias/ubuntu/{puppet,traefik,hipbone}.alias` 에 사내 서버 IP와 계정명이 하드코딩되어 있고,
-> `alias/default/tccli.alias` 에는 Tencent 계정 UIN이 들어 있다.**
+> ⚠️ **현재 `alias/ubuntu/{puppet,traefik,hipbone}.alias` 에 사내 서버 IP와 계정명이 하드코딩되어 있다.**
 > 새 alias를 추가할 때 이 패턴을 따라 하지 말 것. 조직 내부 정보는 `/etc/zsh/alias.sh` 로 분리한다.
+>
+> `alias/default/tccli.alias` 는 이 방식으로 정리된 예다. 역할 ARN(계정 UIN 포함)을 파일에서 빼고
+> `~/.env_vars` 의 `TC_ROLE_<별칭>` 을 `tc-assume` 이 읽도록 바꿨다.
 
 ---
 
@@ -341,7 +345,7 @@ zsh -i -c 'type mkcd; type k'      # 로드 결과 확인
 | --- | --- |
 | macOS 미검증 | `setting_mac.sh` 가 `setEnv.sh` 로 통합되지 않았다. macOS 장비를 다시 쓰게 되면 검증 후 통합할 것 |
 | `alias/mac/` 부재 | macOS 전용 alias가 필요해지면 `alias/mac/` 을 만들고 `zshrc_mac` 로드 목록에 추가 |
-| 사내 정보 하드코딩 | §5 경고 참조. `/etc/zsh/alias.sh` 로 옮기는 정리가 필요 |
+| 사내 정보 하드코딩 | §5 경고 참조. `alias/ubuntu/{puppet,traefik,hipbone}.alias` 를 `/etc/zsh/alias.sh` 로 옮기는 정리가 남아 있다 (tccli는 정리 완료) |
 | `config/puppet-lint.rc` | 저장소에만 있고 연동되지 않는다. 필요해지면 `~/.puppet-lint.rc` 링크 추가 |
 
 ---

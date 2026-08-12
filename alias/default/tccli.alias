@@ -1,11 +1,36 @@
-alias tc-hive-test='tccli sts AssumeRole \
-  --profile default \
-  --RoleArn "qcs::cam::uin/200035697353:roleName/IepIacRole" \
-  --RoleSessionName "hive-test" \
-  --DurationSeconds 3600'
+# tccli - Tencent Cloud CLI 단축 별칭 (prefix: tc-)
+# 전제: tccli 가 PATH에 있어야 함 (bash setEnv.sh -e tccli)
+#
+# 프로필 전환·역할 전환·환경 확인은 functions/tencent.zsh 참고
+#   tc-profiles / tc-use / tc-assume / tc-unassume / tc-env
+#
+# 조회 별칭은 --filter(JMESPath)로 필요한 컬럼만 뽑는다. 뒤에 옵션을 더 붙일 수 있다.
+#   예: tc-cvm --Limit 100 --region ap-seoul
+#
+# 주의: `tc` 는 리눅스 기본 명령(traffic control)이므로 별칭으로 덮지 않는다.
 
-alias tc-hive-sandbox='tccli sts AssumeRole \
-  --profile default \
-  --RoleArn "qcs::cam::uin/200034346413:roleName/IepIacRole" \
-  --RoleSessionName "hive-sandbox" \
-  --DurationSeconds 3600'
+if command -v tccli &> /dev/null; then
+  # --- 설정 / 자격증명 ---
+  alias tc-conf='tccli configure list'                 # 프로필 설정값 확인
+  alias tc-who='tccli sts GetCallerIdentity'           # 현재 자격증명의 주체 확인
+
+  # --- 역할 전환 단축 (RoleArn은 ~/.env_vars 의 TC_ROLE_* 에 정의) ---
+  alias tc-hive-test='tc-assume hive-test'             # TC_ROLE_HIVE_TEST
+  alias tc-hive-sandbox='tc-assume hive-sandbox'       # TC_ROLE_HIVE_SANDBOX
+
+  # --- 리전 / 가용영역 ---
+  alias tc-regions='tccli cvm DescribeRegions --filter "RegionSet[].[Region,RegionName,RegionState]"'
+  alias tc-zones='tccli cvm DescribeZones --filter "ZoneSet[].[Zone,ZoneName,ZoneState]"'
+
+  # --- CVM ---
+  alias tc-cvm='tccli cvm DescribeInstances --filter "InstanceSet[].[InstanceId,InstanceName,PrivateIpAddresses[0],InstanceState]"'
+  alias tc-cvm-raw='tccli cvm DescribeInstances'       # 원본 JSON 전체
+  # 이름으로 찾기 (--cli-unfold-argument 로 중첩 파라미터를 점 표기법으로 넘긴다)
+  #   예: tc-cvm-name web-01
+  alias tc-cvm-name='tccli cvm DescribeInstances --cli-unfold-argument --filter "InstanceSet[].[InstanceId,InstanceName,PrivateIpAddresses[0],InstanceState]" --Filters.0.Name instance-name --Filters.0.Values.0'
+
+  # --- VPC / CLB ---
+  alias tc-vpc='tccli vpc DescribeVpcs --filter "VpcSet[].[VpcId,VpcName,CidrBlock]"'
+  alias tc-subnet='tccli vpc DescribeSubnets --filter "SubnetSet[].[SubnetId,SubnetName,CidrBlock,Zone]"'
+  alias tc-clb='tccli clb DescribeLoadBalancers --filter "LoadBalancerSet[].[LoadBalancerId,LoadBalancerName,LoadBalancerVips[0],Status]"'
+fi

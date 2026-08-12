@@ -62,14 +62,14 @@ bash setEnv.sh -h             # 도움말
 | `opentofu` | OpenTofu 설치 및 구성 |
 | `awscli` | AWS CLI v2 설치 |
 | `brew` | Homebrew 설치 |
-| `tccli` | Tencent Cloud CLI 설치 (pipx 기반 격리 환경) |
+| `tccli` | Tencent Cloud CLI 설치 (uv tool 기반 격리 환경) |
 | `coscli` | Tencent Cloud COS CLI 설치 |
 | `go` | Go(golang) 공식 바이너리 설치 (`/usr/local/go`) |
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
 
 `default` 실행 시 동작:
 
-1. 패키지 업데이트 및 필수 패키지 설치 (`wget`, `curl`, `git`, `zsh`, `bat`, `unzip`)
+1. 패키지 업데이트 및 필수 패키지 설치 (`wget`, `curl`, `git`, `zsh`, `bat`, `unzip`, `jq`)
 2. 현재 사용자에 대한 `NOPASSWD` sudoers 설정
 3. 로그인 셸을 zsh로 변경
 4. oh-my-zsh / powerlevel10k 테마 / zsh 플러그인 설치
@@ -77,9 +77,9 @@ bash setEnv.sh -h             # 도움말
 5. `zshrc_ubuntu` → `~/.zshrc` 링크
 6. `dotfiles` 링크 (아래 표 참조)
 
-> 참고: tccli는 PEP 668 문제를 피하기 위해 pipx로 설치하며, `~/.local/bin`은
-> zshrc에서 조건부로 PATH에 추가됩니다 (`pipx ensurepath`를 쓰지 않음).
-> 설치 후 `tccli configure` / `coscli config`로 인증 정보를 설정하세요.
+> 참고: Python으로 만들어진 CLI(tccli)는 **uv tool** 로 격리 설치합니다. uv가 자체 Python을
+> 쓰므로 시스템 `python3` / PEP 668 문제와 무관합니다. `~/.local/bin` 은 zshrc에서 조건부로
+> PATH에 추가됩니다. 설치 후 `tccli configure` / `coscli config`로 인증 정보를 설정하세요.
 
 ## Python 환경 (uv)
 
@@ -180,7 +180,51 @@ alias는 `alias/default/uv.alias` 를 참고하세요 (`uvs`, `uva`, `uvr`, `uvp
 
 > uv 설치 스크립트는 기본적으로 `~/.zshrc` 에 PATH를 직접 추가하는데,
 > zshrc는 git으로 관리되므로 `INSTALLER_NO_MODIFY_PATH=1` 로 이를 막습니다.
-> `~/.local/bin` 은 zshrc에서 조건부로 PATH에 추가됩니다 (tccli/pipx와 같은 방식).
+> `~/.local/bin` 은 zshrc에서 조건부로 PATH에 추가됩니다 (uv tool로 설치한 tccli도 같은 경로).
+
+## Tencent Cloud 환경 (tccli)
+
+```bash
+bash setEnv.sh -e tccli     # uv tool 로 tccli 설치 (uv가 없으면 함께 설치)
+bash setEnv.sh -e coscli    # COS 전용 CLI
+```
+
+설치 시 함께 처리되는 것:
+
+1. `uv tool install tccli` — `~/.local/bin` 에 `tccli`, `tccli_completer` 노출
+2. 과거 pipx로 설치한 tccli가 있으면 제거하고 uv tool 로 이전
+3. zsh 자동완성 — tccli는 bash 형식 completer만 제공하므로 zshrc가 `bashcompinit` 로 연결
+
+### 프로필 / 역할 전환 helper (`functions/tencent.zsh`)
+
+| 함수 | 설명 |
+| --- | --- |
+| `tc-profiles` | `~/.tccli` 에 설정된 프로필 목록 (현재 프로필은 `*`) |
+| `tc-use <프로필>` | 사용할 프로필 전환 (`TCCLI_PROFILE`), 인자 없으면 현재 프로필 |
+| `tc-assume <별칭>` | AssumeRole 후 임시 자격증명을 `TENCENTCLOUD_*` 로 export |
+| `tc-unassume` | 역할 전환 해제 + 원래 환경변수 자격증명 복구 |
+| `tc-env` | 프로필·리전·지금 쓰이는 자격증명·역할 만료까지 남은 시간 |
+
+역할 ARN에는 조직 UIN이 들어가므로 저장소에 두지 않고 `~/.env_vars` 에 별칭으로 정의합니다.
+
+```bash
+# ~/.env_vars
+export TC_ROLE_HIVE_SANDBOX="qcs::cam::uin/<UIN>:roleName/<역할이름>"
+export TC_ROLE_HIVE_TEST="qcs::cam::uin/<UIN>:roleName/<역할이름>"
+```
+
+```bash
+tc-assume hive-sandbox        # = tc-hive-sandbox
+tc-env                        # 만료까지 남은 시간 확인
+tc-unassume                   # 원래 상태로 복귀
+```
+
+> **자격증명 우선순위 주의** (tccli 3.1.x)
+> `--profile` 을 직접 붙인 명령 > `TENCENTCLOUD_SECRET_ID/KEY` 환경변수 > `TCCLI_PROFILE` 프로필 파일.
+> 즉 `~/.env_vars` 에 정적 키가 export되어 있으면 `tc-use` 로 프로필만 바꿔도 키는 바뀌지 않습니다.
+> 지금 무엇이 쓰이는지는 `tc-env` 가 알려줍니다.
+
+조회 alias는 `alias/default/tccli.alias` 를 참고하세요 (`tc-cvm`, `tc-vpc`, `tc-clb`, `tc-regions` 등).
 
 ## 설정 파일 연동 방식
 
@@ -224,12 +268,13 @@ GUI에서 VS Code나 Windows Terminal 설정을 바꿨다면 `winpull` 로 회�
 
 ```
 alias/
-├── default/   # awscli, kubenetes, tccli, opshub
+├── default/   # awscli, kubenetes, tccli, coscli, uv, opshub
 └── ubuntu/    # sudo, terraform, terragrunt, puppet, traefik, hipbone
 
 functions/
-├── common.zsh # mkcd, extract, path, up
-└── python.zsh # uvon, uvoff, uvinfo
+├── common.zsh  # mkcd, extract, path, up
+├── python.zsh  # uvon, uvoff, uvinfo
+└── tencent.zsh # tc-profiles, tc-use, tc-assume, tc-unassume, tc-env
 ```
 
 - 한 줄 치환이면 `alias/`, 인자 처리나 분기가 필요하면 `functions/`
@@ -243,6 +288,12 @@ functions/
 ```bash
 # ~/.env_vars 작성 후
 source ~/.zshrc
+```
+
+예: Tencent Cloud 역할 전환용 ARN (조직 UIN이 들어가므로 저장소에 두지 않습니다)
+
+```bash
+export TC_ROLE_HIVE_SANDBOX="qcs::cam::uin/<UIN>:roleName/<역할이름>"
 ```
 
 ## macOS
@@ -278,7 +329,7 @@ user_env/
 ├── alias/                        # → ~/alias
 │   ├── default/
 │   └── ubuntu/
-├── functions/                    # → ~/functions
+├── functions/                    # → ~/functions (common, python, tencent)
 │
 ├── config/
 │   ├── p10k.zsh                  # → ~/.p10k.zsh
