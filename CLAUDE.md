@@ -117,7 +117,7 @@ user_env/
 ├── functions/                    # → ~/functions (helper 함수)
 │   ├── common.zsh                #   mkcd, extract, path, up
 │   ├── python.zsh                #   uvon, uvoff, uvinfo
-│   └── tencent.zsh               #   tc-profiles, tc-use, tc-assume, tc-unassume, tc-env
+│   └── tencent.zsh               #   tc-profiles, tc-use, tc-assume, tc-unassume, tc-env, tc-cvm-grep
 │
 ├── config/
 │   ├── p10k.zsh                  # → ~/.p10k.zsh   (프롬프트 동일성)

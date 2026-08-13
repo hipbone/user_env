@@ -183,6 +183,57 @@ tc-unassume() {
   unset TC_PREV_SECRET_ID TC_PREV_SECRET_KEY TC_PREV_TOKEN
 }
 
+# 이름 부분 일치로 CVM 찾기
+#   CVM의 instance-name 필터는 완전 일치라서 서버 쪽에서 부분 검색이 안 된다.
+#   전체를 100건씩 받아와 클라이언트에서 거른다 (대소문자 무시).
+#   사용법: tc-cvm-grep <문자열> [tccli 추가 옵션...]
+#   예:     tc-cvm-grep was --region ap-guangzhou --profile hive-sandbox
+tc-cvm-grep() {
+  local pat="$1"
+  shift 2>/dev/null
+
+  if [[ -z "$pat" ]]; then
+    echo "사용법: tc-cvm-grep <이름 일부> [tccli 옵션...]"
+    return 1
+  fi
+  if ! command -v jq &>/dev/null; then
+    echo "jq가 필요합니다: sudo apt install -y jq"
+    return 1
+  fi
+
+  local offset=0 limit=100 total=1 json rc hits out=""
+  while (( offset < total )); do
+    json=$(tccli cvm DescribeInstances --Limit "$limit" --Offset "$offset" "$@" 2>&1)
+    rc=$?
+    if [[ $rc -ne 0 ]] || ! print -r -- "$json" | jq -e '(.Response // .).InstanceSet' &>/dev/null; then
+      echo "조회에 실패했습니다."
+      print -r -- "$json"
+      return 1
+    fi
+
+    total=$(print -r -- "$json" | jq -r '(.Response // .).TotalCount')
+    hits=$(print -r -- "$json" | jq -r --arg p "$pat" '
+      (.Response // .).InstanceSet[]
+      | select((.InstanceName // "") | ascii_downcase | contains($p | ascii_downcase))
+      | [.InstanceId, .InstanceName, (.PrivateIpAddresses[0] // "-"), .InstanceState]
+      | @tsv')
+    [[ -n "$hits" ]] && out+="${hits}"$'\n'
+
+    (( offset += limit ))
+  done
+
+  if [[ -z "$out" ]]; then
+    echo "이름에 '${pat}' 를 포함하는 인스턴스가 없습니다. (조회 대상 ${total}건)"
+    return 1
+  fi
+
+  if command -v column &>/dev/null; then
+    print -rn -- "$out" | column -t -s $'\t'
+  else
+    print -rn -- "$out"
+  fi
+}
+
 # 현재 Tencent Cloud 환경 상태를 한눈에 보기
 tc-env() {
   local profile="${TCCLI_PROFILE:-default}" region left

@@ -204,6 +204,11 @@ bash setEnv.sh -e coscli    # COS 전용 CLI
 | `tc-assume <별칭>` | AssumeRole 후 임시 자격증명을 `TENCENTCLOUD_*` 로 export |
 | `tc-unassume` | 역할 전환 해제 + 원래 환경변수 자격증명 복구 |
 | `tc-env` | 프로필·리전·지금 쓰이는 자격증명·역할 만료까지 남은 시간 |
+| `tc-cvm-grep <문자열>` | CVM 이름 **부분 일치** 검색 (대소문자 무시, 100건씩 페이징) |
+
+> CVM의 `instance-name` 필터는 완전 일치라서 `tc-cvm-name` 은 이름 전체를 정확히 넘겨야 합니다.
+> 부분 검색은 `tc-cvm-grep` 을 쓰세요 (전체를 받아 클라이언트에서 거릅니다).
+> CLB는 서버가 부분 검색을 지원하므로 `tc-clb --SearchKey <문자열>` 로 충분합니다.
 
 역할 ARN에는 조직 UIN이 들어가므로 저장소에 두지 않고 `~/.env_vars` 에 별칭으로 정의합니다.
 

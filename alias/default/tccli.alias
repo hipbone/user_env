@@ -27,6 +27,7 @@ if command -v tccli &> /dev/null; then
   alias tc-cvm-raw='tccli cvm DescribeInstances'       # 원본 JSON 전체
   # 이름으로 찾기 (--cli-unfold-argument 로 중첩 파라미터를 점 표기법으로 넘긴다)
   #   예: tc-cvm-name web-01
+  # instance-name 필터는 완전 일치다. 부분 검색은 tc-cvm-grep (functions/tencent.zsh)
   # 문자열 배열(Values)에는 인덱스를 붙이지 않는다. 값을 이어 쓰면 여러 개가 된다.
   #   (인덱스는 Filters 처럼 '객체'의 배열에만 붙는다: --Filters.0.Name)
   alias tc-cvm-name='tccli cvm DescribeInstances --cli-unfold-argument --filter "InstanceSet[].[InstanceId,InstanceName,PrivateIpAddresses[0],InstanceState]" --Filters.0.Name instance-name --Filters.0.Values'
