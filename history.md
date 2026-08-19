@@ -5,6 +5,65 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-08-19 — AWS 인증을 aws-vault 로 전환 (`functions/aws.zsh`)
+
+### 배경
+
+AWS 자격증명을 aws-vault 키스토어로 옮기면서, 명령이 이렇게 길어졌습니다.
+
+```
+aws-vault --backend=file exec terraform -- terraform plan
+```
+
+길이만 문제가 아니었습니다. file 백엔드는 `exec` 할 때마다 패스프레이즈를 묻고,
+`~/.aws/config` 의 프로필 대부분이 `role_arn` + `mfa_serial` 조합이라 MFA 토큰도 매번 필요합니다.
+`tf plan` → `tf apply` 처럼 연달아 여러 명령을 치는 terraform 작업과 상성이 나빴습니다.
+
+### 선택: 명령 래핑이 아니라 세션 export
+
+두 가지 방법이 있었습니다.
+
+1. `tf` 를 함수로 바꿔 매 호출마다 `aws-vault exec` 를 앞에 붙인다
+2. `aws-vault export` 로 임시 자격증명을 받아 셸 환경변수에 한 번만 넣는다
+
+2번을 골랐습니다.
+
+- 인증 프롬프트(패스프레이즈·MFA)가 프로필 활성화 시점 한 번으로 끝납니다.
+- `tf` / `tg` / `aws` / SDK 어느 것도 손대지 않아도 됩니다. AWS SDK가 환경변수 자격증명을
+  가장 먼저 보기 때문에, 도구를 하나씩 래핑하는 것보다 적용 범위가 넓습니다.
+- 이미 `tc-assume` / `tc-unassume` (Tencent)가 같은 구조라 익힐 게 없습니다.
+
+대가는 셸에 임시 키가 남는다는 점입니다. 그래서 `av-off` 로 지우는 경로와,
+만료까지 남은 시간을 보여주는 `av-env` 를 같이 뒀습니다. 유효시간은 기본 1시간입니다.
+
+한 번만 실행할 명령까지 셸을 전환할 필요는 없어서, `avx`(= `aws-vault exec`) alias를 함께 뒀습니다.
+
+### `aws-vault exec` 이 아니라 `export` 를 쓸 때 직접 채워야 하는 것
+
+`exec` 는 자식 프로세스에 리전(`AWS_REGION`)까지 넣어주지만 `export` 는 자격증명만 줍니다.
+그대로 두면 provider에 region이 없는 terraform 코드가 깨지므로, `av-on` 이 `~/.aws/config` 를
+직접 파싱해서 리전을 채웁니다. 프로필에 `region` 이 없으면 `source_profile` 을 따라 올라갑니다.
+
+### 백엔드 지정 위치
+
+`--backend=file` 을 alias나 함수에 흩뿌리지 않고 `zshrc_ubuntu` 에서
+`AWS_VAULT_BACKEND=file` 로 한 번만 지정합니다. 리눅스/WSL에는 secret-service(gnome-keyring)가
+없어 기본 백엔드로는 실패하기 때문입니다. macOS는 keychain이 기본이라 `zshrc_mac` 에는 넣지 않았습니다.
+
+### 알게 된 것 — alias 파일의 `command -v` 가드
+
+`alias/default/aws-vault.alias` 에 처음엔 `command -v aws-vault` 가드를 걸었는데 alias가 생기지 않았습니다.
+zshrc의 로드 순서상 alias 파일이 brew `shellenv` 보다 **먼저** 실행돼서, 그 시점엔
+brew로 설치한 aws-vault가 아직 PATH에 없습니다. alias 정의 자체는 도구가 없어도 에러가 아니므로
+가드를 뺐습니다. 함수 쪽(`av-on`)은 호출 시점에 검사하므로 가드가 정상 동작합니다.
+
+### 검증한 것 / 안 한 것
+
+- 검증: `zsh -n` 문법, `av-profiles` / `av-env` / `av-off` 출력,
+  `aws-vault` 를 스텁으로 대체한 상태에서 `av-on` → export → `av-off` 복구 경로
+- 미검증: 실제 `aws-vault export` 호출 (패스프레이즈·MFA가 필요해 실행하지 않음),
+  macOS 동작
+
 ## 2026-08-12 — tccli 운영 구성 정비 (pipx → uv tool, helper 함수, 역할 ARN 외부화)
 
 ### 배경

@@ -117,6 +117,7 @@ user_env/
 ├── functions/                    # → ~/functions (helper 함수)
 │   ├── common.zsh                #   mkcd, extract, path, up
 │   ├── python.zsh                #   uvon, uvoff, uvinfo
+│   ├── aws.zsh                   #   av-profiles, av-on, av-off, av-env (aws-vault)
 │   └── tencent.zsh               #   tc-profiles, tc-use, tc-assume, tc-unassume, tc-env, tc-cvm-grep
 │
 ├── config/
@@ -256,6 +257,11 @@ Main 흐름: `get_os` → `get_pkgmanager` → `configure_environment "$environm
 >
 > `alias/default/tccli.alias` 는 이 방식으로 정리된 예다. 역할 ARN(계정 UIN 포함)을 파일에서 빼고
 > `~/.env_vars` 의 `TC_ROLE_<별칭>` 을 `tc-assume` 이 읽도록 바꿨다.
+
+> alias 파일은 `zshrc` 의 brew `shellenv` **보다 먼저** 로드된다. brew로 설치한 도구(aws-vault 등)는
+> alias 정의 시점에 아직 PATH에 없으므로 `command -v` 가드를 걸면 alias가 통째로 사라진다.
+> alias 정의 자체는 에러를 내지 않으니 이 경우엔 가드 없이 그냥 정의한다
+> (`alias/default/aws-vault.alias` 참고). 가드가 필요한 건 함수 호출 시점 검사 쪽이다.
 
 ---
 

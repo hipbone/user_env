@@ -81,6 +81,12 @@ if command -v direnv &>/dev/null; then
   eval "$(direnv hook zsh)"
 fi
 
+# aws-vault
+# 백엔드를 여기서 고정해 명령마다 --backend=file 을 붙이지 않도록 한다.
+# 리눅스/WSL 에는 보통 secret-service(gnome-keyring)가 없어 기본 백엔드로는 실패한다.
+# (macOS는 keychain 이 기본이므로 zshrc_mac 에는 두지 않는다)
+command -v aws-vault &>/dev/null && export AWS_VAULT_BACKEND=file
+
 # ---------------------------------------------------------------- #
 # PATH
 # ---------------------------------------------------------------- #

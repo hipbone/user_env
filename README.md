@@ -182,6 +182,56 @@ alias는 `alias/default/uv.alias` 를 참고하세요 (`uvs`, `uva`, `uvr`, `uvp
 > zshrc는 git으로 관리되므로 `INSTALLER_NO_MODIFY_PATH=1` 로 이를 막습니다.
 > `~/.local/bin` 은 zshrc에서 조건부로 PATH에 추가됩니다 (uv tool로 설치한 tccli도 같은 경로).
 
+## AWS 환경 (aws-vault)
+
+정적 키를 `~/.aws/credentials` 에 평문으로 두지 않고 aws-vault 키스토어에 보관합니다.
+프로필 정의(리전, `role_arn`, `mfa_serial`)는 `~/.aws/config` 에 그대로 둡니다.
+
+aws-vault 는 brew로 설치합니다 (`setEnv.sh` 의 설치 대상은 아님).
+
+```bash
+brew install aws-vault
+aws-vault add <프로필>      # 정적 키를 키스토어에 등록
+```
+
+백엔드는 zshrc가 `AWS_VAULT_BACKEND=file` 로 고정하므로 명령마다 `--backend=file` 을 붙이지 않습니다.
+(리눅스/WSL에는 secret-service가 없어 기본 백엔드로는 실패합니다. macOS는 keychain 기본값을 씁니다.)
+
+### 프로필 전환 helper (`functions/aws.zsh`)
+
+| 함수 | 설명 |
+| --- | --- |
+| `av-profiles` | `~/.aws/config` 프로필 목록 (현재 활성 프로필은 `*`, 리전·역할 표시) |
+| `av-on <프로필>` | 임시 자격증명을 현재 셸에 `AWS_*` 환경변수로 export (리전 포함) |
+| `av-off` | 자격증명 해제 + `av-on` 이전 환경변수 복구 |
+| `av-env` | 지금 쓰이는 자격증명·리전·만료까지 남은 시간 |
+
+명령마다 `aws-vault exec ... --` 를 붙이면 길어지고, file 백엔드는 실행할 때마다 패스프레이즈를,
+MFA 역할 프로필은 매번 토큰을 묻습니다. `av-on` 은 `aws-vault export` 로 임시 자격증명을 **한 번만**
+받아 셸에 넣으므로, 그 뒤로는 terraform / terragrunt / aws CLI 를 원래 명령 그대로 씁니다.
+
+```bash
+av-on terraform     # 프로필 활성화 (패스프레이즈·MFA는 여기서 한 번만)
+tf plan             # = aws-vault --backend=file exec terraform -- terraform plan
+tf apply
+av-env              # 만료까지 남은 시간 확인
+av-off              # 끝나면 셸에서 임시 키 제거
+```
+
+유효시간은 기본 1시간입니다. 길게 쓰려면 `av-on hive-live -d 4h`,
+MFA 토큰을 미리 넘기려면 `av-on hive-live -t 123456` 처럼 `aws-vault export` 옵션을 그대로 붙입니다.
+
+한 번만 실행할 명령은 셸을 전환하지 말고 `avx`(= `aws-vault exec`)를 씁니다.
+
+```bash
+avx hive-live -- aws s3 ls
+av-list             # 키스토어에 등록된 자격증명 목록
+av-who              # 지금 자격증명이 어느 계정/사용자인지
+```
+
+> `av-on` 은 셸에 임시 키를 남깁니다. 작업이 끝나면 `av-off` 로 지우세요.
+> `AWS_PROFILE` 이 함께 설정되어 있으면 도구에 따라 어느 쪽을 볼지 달라지므로 `av-on` 이 경고합니다.
+
 ## Tencent Cloud 환경 (tccli)
 
 ```bash
@@ -273,13 +323,14 @@ GUI에서 VS Code나 Windows Terminal 설정을 바꿨다면 `winpull` 로 회�
 
 ```
 alias/
-├── default/   # awscli, kubenetes, tccli, coscli, uv, opshub
+├── default/   # awscli, aws-vault, kubenetes, tccli, coscli, uv, opshub
 └── ubuntu/    # sudo, terraform, terragrunt, puppet, traefik, hipbone
 
 functions/
 ├── common.zsh  # mkcd, extract, path, up
 ├── python.zsh  # uvon, uvoff, uvinfo
-└── tencent.zsh # tc-profiles, tc-use, tc-assume, tc-unassume, tc-env
+├── aws.zsh     # av-profiles, av-on, av-off, av-env
+└── tencent.zsh # tc-profiles, tc-use, tc-assume, tc-unassume, tc-env, tc-cvm-grep
 ```
 
 - 한 줄 치환이면 `alias/`, 인자 처리나 분기가 필요하면 `functions/`
@@ -334,7 +385,7 @@ user_env/
 ├── alias/                        # → ~/alias
 │   ├── default/
 │   └── ubuntu/
-├── functions/                    # → ~/functions (common, python, tencent)
+├── functions/                    # → ~/functions (common, python, aws, tencent)
 │
 ├── config/
 │   ├── p10k.zsh                  # → ~/.p10k.zsh
