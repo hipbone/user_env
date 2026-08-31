@@ -66,6 +66,7 @@ bash setEnv.sh -h             # 도움말
 | `coscli` | Tencent Cloud COS CLI 설치 |
 | `go` | Go(golang) 공식 바이너리 설치 (`/usr/local/go`) |
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
+| `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) |
 
 `default` 실행 시 동작:
 
@@ -280,6 +281,23 @@ tc-unassume                   # 원래 상태로 복귀
 > 지금 무엇이 쓰이는지는 `tc-env` 가 알려줍니다.
 
 조회 alias는 `alias/default/tccli.alias` 를 참고하세요 (`tc-cvm`, `tc-vpc`, `tc-clb`, `tc-regions` 등).
+
+## Claude Code
+
+Anthropic 공식 CLI(`claude`)를 [공식 네이티브 설치 스크립트](https://code.claude.com/docs/en/setup)로 설치합니다.
+
+```bash
+bash setEnv.sh -e claude
+```
+
+- 실행 파일은 `~/.local/bin/claude` 에 설치됩니다 (`~/.local/share/claude/versions/` 로의 심볼릭 링크).
+  `~/.local/bin` 은 zshrc가 조건부로 PATH에 추가하므로 별도 설정이 필요 없습니다.
+- 네이티브 설치는 셸 프로필을 건드리지 않고, 실행 중 백그라운드로 **자동 업데이트**됩니다.
+  수동 갱신은 `claude update`, 상태 점검은 `claude doctor`.
+- 이미 설치되어 있으면 `claude update` 로 갱신합니다.
+- npm 전역 설치는 쓰지 않습니다. Node 런타임 의존을 새 장비에 강요하지 않기 위해 uv/tccli와 같은 방침입니다.
+
+첫 실행 시 `claude` 를 입력하면 브라우저 로그인이 뜹니다. (Pro / Max / Team / Enterprise / Console 계정 필요)
 
 ## 설정 파일 연동 방식
 

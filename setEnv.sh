@@ -5,8 +5,8 @@
 # Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2026-08-11                                          #
-# Version      : 2.1                                                 #
+# Last Update  : 2026-09-01                                          #
+# Version      : 2.2                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -48,6 +48,7 @@ print_help() {
   echo "    coscli                      Tencent Cloud COS CLI를 설치"
   echo "    go                          Go(golang)를 설치"
   echo "    uv                          uv(Python 패키지·버전 관리자)를 설치"
+  echo "    claude                      Claude Code(Anthropic 공식 CLI)를 설치"
 }
 
 ## OS 정보 가져오기
@@ -507,6 +508,37 @@ set_uv() {
   echo "자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
 }
 
+## Claude Code(Anthropic 공식 CLI) 설치
+## 공식 네이티브 설치 스크립트를 사용한다.
+## - 실행 파일은 ~/.local/bin/claude 에 설치된다 (~/.local/share/claude/versions/ 로의 심볼릭 링크).
+##   ~/.local/bin 은 zshrc_ubuntu 가 조건부로 PATH에 추가하므로 별도 PATH 설정이 필요 없다.
+## - 네이티브 설치는 셸 프로필을 수정하지 않고, 실행 중 백그라운드로 자동 업데이트된다.
+## - npm(전역 설치)은 쓰지 않는다. Node 런타임 의존을 새 장비에 강요하게 되므로 uv/tccli와 같은 결로 맞춘다.
+set_claude() {
+  echo "Claude Code를 설치합니다..."
+
+  if command -v claude &> /dev/null; then
+    echo "Claude Code가 이미 설치되어 있습니다: $(claude --version 2>/dev/null)"
+    echo "최신 버전으로 갱신합니다."
+    claude update || exit 1
+  else
+    curl -fsSL https://claude.ai/install.sh | bash || exit 1
+    export PATH="${HOME}/.local/bin:${PATH}"
+  fi
+
+  if ! command -v claude &> /dev/null; then
+    echo "Claude Code 설치에 실패했습니다."
+    exit 1
+  fi
+
+  echo ""
+  echo "Claude Code 설치가 완료되었습니다: $(claude --version 2>/dev/null)"
+  echo "  claude              대화형 세션 시작 (첫 실행 시 브라우저 로그인)"
+  echo "  claude update       수동 업데이트 (네이티브 설치는 평소 백그라운드 자동 업데이트)"
+  echo "  claude doctor       설치 상태 점검"
+  echo "PATH는 새 셸을 열거나 'exec zsh' 후 적용됩니다."
+}
+
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
@@ -550,6 +582,10 @@ configure_environment() {
   uv)
     echo "uv(Python 환경 관리자)를 설치하는 중입니다..."
     is_linux && set_uv
+    ;;
+  claude)
+    echo "Claude Code를 설치하는 중입니다..."
+    is_linux && set_claude
     ;;
   *)
     echo "알 수 없는 환경: $1"
