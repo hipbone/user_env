@@ -65,11 +65,16 @@ export LANG=ko_KR.UTF-8
 test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
 test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-# nvm
+# nvm — 공식 설치(~/.nvm, setEnv.sh -e nvm)를 우선하고, brew로 설치한 경우도 지원한다.
+# 두 곳을 다 읽으면 nvm 함수가 뒤엣것으로 덮어써지므로 하나만 고른다.
 export NVM_DIR="$HOME/.nvm"
-[ -s "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh"
-[ -s "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+elif [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" ]; then
+  \. "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh"
+  [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm"
+fi
 
 # rbenv
 if command -v rbenv &>/dev/null; then

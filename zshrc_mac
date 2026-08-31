@@ -58,6 +58,25 @@ export CLICOLOR=1
 LSCOLORS=Gxfxcxdxbxegedabagacad
 
 # ---------------------------------------------------------------- #
+# 개발 도구 — 설치된 것만 조건부로 로드
+# ---------------------------------------------------------------- #
+# nvm — 공식 설치(~/.nvm)를 우선하고, brew로 설치한 경우도 지원한다.
+# 두 곳을 다 읽으면 nvm 함수가 뒤엣것으로 덮어써지므로 하나만 고른다.
+# (brew prefix는 Apple Silicon이 /opt/homebrew, Intel이 /usr/local. 셸 시작마다
+#  brew --prefix 를 부르지 않도록 두 경로를 직접 확인한다)
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+  \. "/opt/homebrew/opt/nvm/nvm.sh"
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+elif [ -s "/usr/local/opt/nvm/nvm.sh" ]; then
+  \. "/usr/local/opt/nvm/nvm.sh"
+  [ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"
+fi
+
+# ---------------------------------------------------------------- #
 # PATH
 # ---------------------------------------------------------------- #
 # uv / uv tool 설치 도구 (uv, uvx, tccli 등)

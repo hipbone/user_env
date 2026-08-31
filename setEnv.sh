@@ -6,7 +6,7 @@
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
 # Last Update  : 2026-09-01                                          #
-# Version      : 2.2                                                 #
+# Version      : 2.3                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -48,6 +48,7 @@ print_help() {
   echo "    coscli                      Tencent Cloud COS CLI를 설치"
   echo "    go                          Go(golang)를 설치"
   echo "    uv                          uv(Python 패키지·버전 관리자)를 설치"
+  echo "    nvm                         nvm(Node 버전 관리자)과 LTS Node를 설치"
   echo "    claude                      Claude Code(Anthropic 공식 CLI)를 설치"
 }
 
@@ -508,6 +509,54 @@ set_uv() {
   echo "자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
 }
 
+## nvm(Node Version Manager) + LTS Node 설치
+## Node 버전은 nvm으로 관리하고, 패키지는 각 Node 버전에 딸려오는 npm을 그대로 쓴다.
+## - 공식 설치 스크립트는 ~/.zshrc 에 nvm 로드 블록을 직접 추가하는데, zshrc는 git으로 관리되므로
+##   PROFILE=/dev/null 로 이를 막는다 (uv의 INSTALLER_NO_MODIFY_PATH=1 과 같은 이유).
+##   nvm 로드는 zshrc_* 의 "개발 도구" 섹션이 조건부로 처리한다.
+## - 설치 위치는 ~/.nvm 이고, 이미 있으면 설치 스크립트가 fetch/checkout으로 갱신한다(멱등).
+set_nvm() {
+  echo "nvm(Node Version Manager)을 설치합니다..."
+
+  export NVM_DIR="${HOME}/.nvm"
+
+  # 최신 릴리스 태그 조회
+  # GitHub API 대신 git ls-remote 를 쓴다 (비인증 API의 rate limit을 타지 않기 위함)
+  local nvm_version
+  nvm_version=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/nvm-sh/nvm.git 'v*' \
+    | head -n 1 | sed 's|.*/||')
+  if [ -z "${nvm_version}" ]; then
+    echo "nvm 최신 버전 정보를 가져오지 못했습니다."
+    exit 1
+  fi
+  echo "설치할 버전: ${nvm_version}"
+
+  curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/${nvm_version}/install.sh" \
+    | env PROFILE=/dev/null bash || exit 1
+
+  if [ ! -s "${NVM_DIR}/nvm.sh" ]; then
+    echo "nvm 설치에 실패했습니다."
+    exit 1
+  fi
+
+  # zshrc는 새 셸에서 로드되므로, 지금 셸에는 직접 읽어 들여 Node를 설치한다
+  . "${NVM_DIR}/nvm.sh"
+
+  echo "LTS Node를 설치합니다..."
+  nvm install --lts || exit 1
+  # 새 셸에서 쓸 기본 버전 지정 (지정하지 않으면 nvm use 를 매번 해야 한다)
+  nvm alias default 'lts/*'
+
+  echo ""
+  echo "nvm 설치가 완료되었습니다: $(nvm --version)"
+  echo "  node $(node --version) / npm $(npm --version)"
+  echo "  nvm ls                     설치된 Node 버전 목록"
+  echo "  nvm install <버전>          특정 버전 설치 (예: nvm install 22)"
+  echo "  nvm use <버전>              현재 셸의 버전 전환"
+  echo "  nvm alias default <버전>    새 셸의 기본 버전 지정"
+  echo "nvm은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
+}
+
 ## Claude Code(Anthropic 공식 CLI) 설치
 ## 공식 네이티브 설치 스크립트를 사용한다.
 ## - 실행 파일은 ~/.local/bin/claude 에 설치된다 (~/.local/share/claude/versions/ 로의 심볼릭 링크).
@@ -582,6 +631,10 @@ configure_environment() {
   uv)
     echo "uv(Python 환경 관리자)를 설치하는 중입니다..."
     is_linux && set_uv
+    ;;
+  nvm)
+    echo "nvm(Node 버전 관리자)을 설치하는 중입니다..."
+    is_linux && set_nvm
     ;;
   claude)
     echo "Claude Code를 설치하는 중입니다..."

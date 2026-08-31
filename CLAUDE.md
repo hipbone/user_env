@@ -160,7 +160,7 @@ bash setEnv.sh -e winpush      # 저장소 → Windows
 bash setEnv.sh -e winpull      # Windows → 저장소
 
 # 도구 설치
-bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv|claude
+bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv|nvm|claude
 ```
 
 ### 언어 런타임 관리 방침
@@ -169,7 +169,7 @@ bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv|claude
 | --- | --- | --- |
 | Python | **uv** (`-e uv`) | `~/.local/bin`, 런타임은 `~/.local/share/uv` |
 | Go | 공식 바이너리 (`-e go`) | `/usr/local/go` |
-| Node | nvm (수동) | `~/.nvm` |
+| Node | **nvm** (`-e nvm`) | `~/.nvm`, 패키지는 각 Node의 npm |
 | Ruby | rbenv (수동) | `~/.rbenv` |
 
 - **Python은 uv로 통일한다.** pyenv, poetry, virtualenv, `pip install --user`, pipx 를 들이지 않는다.
@@ -182,6 +182,9 @@ bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv|claude
   ```bash
   # uv
   curl -fsSL https://astral.sh/uv/install.sh | env INSTALLER_NO_MODIFY_PATH=1 sh
+
+  # nvm
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/<태그>/install.sh | env PROFILE=/dev/null bash
   ```
 
 - CLI 도구의 zsh 자동완성은 `~/.zfunc/_<도구>` 로 생성한다

@@ -66,6 +66,7 @@ bash setEnv.sh -h             # 도움말
 | `coscli` | Tencent Cloud COS CLI 설치 |
 | `go` | Go(golang) 공식 바이너리 설치 (`/usr/local/go`) |
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
+| `nvm` | nvm(Node 버전 관리자) 설치 + LTS Node 설치 (`~/.nvm`) |
 | `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) |
 
 `default` 실행 시 동작:
@@ -182,6 +183,36 @@ alias는 `alias/default/uv.alias` 를 참고하세요 (`uvs`, `uva`, `uvr`, `uvp
 > uv 설치 스크립트는 기본적으로 `~/.zshrc` 에 PATH를 직접 추가하는데,
 > zshrc는 git으로 관리되므로 `INSTALLER_NO_MODIFY_PATH=1` 로 이를 막습니다.
 > `~/.local/bin` 은 zshrc에서 조건부로 PATH에 추가됩니다 (uv tool로 설치한 tccli도 같은 경로).
+
+## Node 환경 (nvm)
+
+Node 버전은 [nvm](https://github.com/nvm-sh/nvm)으로 관리하고, 패키지는 각 Node 버전에 딸려오는
+npm을 그대로 씁니다. (pnpm / yarn이 필요하면 Node에 내장된 `corepack enable` 로 붙입니다.)
+
+```bash
+bash setEnv.sh -e nvm
+```
+
+설치 시 함께 처리되는 것:
+
+1. 최신 nvm 릴리스를 `~/.nvm` 에 설치 (이미 있으면 해당 태그로 갱신)
+2. LTS Node 설치 (`nvm install --lts`)
+3. 새 셸의 기본 버전 지정 (`nvm alias default 'lts/*'`)
+
+```bash
+nvm ls                  # 설치된 버전 목록
+nvm install 22          # 특정 버전 설치
+nvm use 22              # 현재 셸에서 전환
+nvm alias default 22    # 새 셸의 기본 버전
+```
+
+> nvm 설치 스크립트는 기본적으로 `~/.zshrc` 에 로드 블록을 직접 추가하는데,
+> zshrc는 git으로 관리되므로 `PROFILE=/dev/null` 로 이를 막습니다 (uv와 같은 이유).
+> nvm 로드는 `zshrc_*` 의 "개발 도구" 섹션이 조건부로 처리하며,
+> 공식 설치(`~/.nvm`)를 우선하고 brew로 설치한 경우도 지원합니다.
+
+> nvm은 순수 셸 스크립트라 셸 시작이 200~500ms 느려집니다. 이게 거슬리면
+> `fnm` 같은 대안이 있지만, 현재는 널리 쓰이는 nvm으로 통일해 둡니다.
 
 ## AWS 환경 (aws-vault)
 
