@@ -46,7 +46,7 @@ bash setEnv.sh -h             # 도움말
 | 환경 | 설명 |
 | --- | --- |
 | `default` | 기본 환경 구성 (zsh, oh-my-zsh, powerlevel10k, 플러그인, 홈 심볼릭 링크) |
-| `dotfiles` | 설정 파일만 홈에 다시 링크 (alias, functions, tmux, vim, p10k) |
+| `dotfiles` | 설정 파일만 홈에 다시 링크 (alias, functions, tmux, vim, p10k, herdr) |
 
 **Windows 연동 (WSL 전용)**
 
@@ -68,6 +68,7 @@ bash setEnv.sh -h             # 도움말
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
 | `nvm` | nvm(Node 버전 관리자) 설치 + LTS Node 설치 (`~/.nvm`) |
 | `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) |
+| `herdr` | Herdr TUI(코딩 에이전트 멀티플렉서) 설치 (`~/.local/bin`) + 보안 기본 설정 링크 |
 
 `default` 실행 시 동작:
 
@@ -330,6 +331,34 @@ bash setEnv.sh -e claude
 
 첫 실행 시 `claude` 를 입력하면 브라우저 로그인이 뜹니다. (Pro / Max / Team / Enterprise / Console 계정 필요)
 
+## Herdr
+
+여러 코딩 에이전트(Claude Code, Codex 등)를 한 화면에서 돌리고 상태(작업 중 / 입력 대기 / 완료)를 보여주는
+터미널 멀티플렉서 [Herdr](https://herdr.dev) 의 **TUI**(`herdr`)를 설치합니다. 발음은 "허더"(herder, 목동).
+
+```bash
+bash setEnv.sh -e herdr
+```
+
+- [공식 설치 스크립트](https://herdr.dev/tui/docs/install/)로 실행 파일 하나를 `~/.local/bin/herdr` 에 넣습니다.
+  sudo 불필요, 셸 프로필 수정 없음, 다운로드 파일은 SHA-256 검증. 다시 실행하면 최신 버전으로 갱신됩니다.
+- 설치 후 `set_dotfiles` 로 `config/herdr.toml` → `~/.config/herdr/config.toml` 링크를 겁니다.
+- Herdr 앱 / herdr-core(`hc`)는 설치하지 않습니다. TUI와 에이전트를 공유하지 않는 별도 제품이고 아직 초기 버전입니다.
+
+`config/herdr.toml` 의 보안 기본값 (Herdr 기본값과 다른 것):
+
+| 설정 | 값 | 이유 |
+| --- | --- | --- |
+| `update.manifest_check` | `false` | 에이전트 감지 규칙을 herdr.dev에서 받아 자동 적용하지 않음 (내장 규칙은 유지) |
+| `session.resume_agents_on_restore` | `false` | 서버 재시작 후 에이전트가 사람 없이 이전 작업을 이어가지 않게 함 |
+| `remote.manage_ssh_config` | `false` | `herdr --remote` 가 자체 SSH 설정 없이 평범한 ssh 사용 |
+| `onboarding` | `false` | 첫 실행 마법사가 저장소로 링크된 설정 파일을 고쳐 쓰지 않게 함 |
+
+`experimental.pane_history = false`(화면 기록을 디스크에 저장 안 함)는 기본값과 같지만 명시해 두었습니다.
+
+> prefix 키가 tmux와 같은 `ctrl+b` 입니다. tmux 안에서 herdr를 띄우지 말고 따로 쓰세요.
+> 플러그인 마켓플레이스는 검토된 카탈로그가 아니므로 설치 전에 코드를 확인하세요.
+
 ## 설정 파일 연동 방식
 
 ### 심볼릭 링크 (Linux / macOS)
@@ -344,6 +373,7 @@ bash setEnv.sh -e claude
 | `config/tmux.conf` | `~/.tmux.conf` |
 | `config/vimrc` | `~/.vimrc` |
 | `config/p10k.zsh` | `~/.p10k.zsh` |
+| `config/herdr.toml` | `~/.config/herdr/config.toml` |
 
 ### 복사 동기화 (Windows)
 
@@ -437,6 +467,7 @@ user_env/
 ├── functions/                    # → ~/functions (common, python, aws, tencent)
 │
 ├── config/
+│   ├── herdr.toml                # → ~/.config/herdr/config.toml
 │   ├── p10k.zsh                  # → ~/.p10k.zsh
 │   ├── tmux.conf                 # → ~/.tmux.conf
 │   ├── vimrc                     # → ~/.vimrc

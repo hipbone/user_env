@@ -1,0 +1,37 @@
+# Herdr TUI 설정 — ~/.config/herdr/config.toml 로 심볼릭 링크된다 (setEnv.sh -e dotfiles)
+# 홈 쪽 파일이 아니라 저장소 원본을 고칠 것.
+#
+# 원칙: 기본값 중 "사람이 보지 않는 사이에 바깥에서 동작이 바뀌거나 무언가 자동 실행되는 것"만 끈다.
+# 여기 없는 키는 Herdr 기본값을 따른다. 전체 기본값은 `herdr --default-config` 로 확인.
+# 키 목록: https://herdr.dev/tui/docs/configuration/
+
+# 첫 실행 마법사를 띄우지 않는다
+# - 마법사를 끝내면 Herdr가 이 파일에 onboarding = false 를 직접 써넣는다.
+#   이 파일은 저장소로 링크되어 있으므로, 도구가 저장소 파일을 고치지 않도록 미리 적어 둔다.
+onboarding = false
+
+[update]
+# 새 버전 알림은 유지한다 (확인만 하고 설치는 `herdr update` 로 사람이 한다)
+version_check = true
+channel = "stable"
+# 에이전트 감지 규칙을 herdr.dev에서 받아 자동 적용하는 기능을 끈다
+# - 실행 중인 프로그램의 동작이 원격 서버에 따라 바뀌는 경로를 막기 위함
+# - 바이너리에 내장된 규칙은 그대로 적용되므로 Claude Code 등 주요 에이전트 감지는 동작한다
+#   (규칙 갱신은 Herdr 업데이트로 받는다)
+manifest_check = false
+
+[session]
+# 서버 재시작 후 에이전트 대화를 자동으로 다시 띄우지 않는다
+# - 사람이 보지 않는 상태에서 에이전트가 이전 작업을 이어가지 않도록 한다
+# - 레이아웃은 복원되므로, 필요한 에이전트만 직접 다시 실행하면 된다
+resume_agents_on_restore = false
+
+[remote]
+# `herdr --remote` 가 자체 SSH 설정(연결 재사용·제어 소켓)을 만들지 않고 평범한 ssh 를 그대로 쓴다
+# - ~/.ssh/config 의 설정만으로 동작이 결정되도록 하기 위함
+manage_ssh_config = false
+
+[experimental]
+# pane 화면 기록을 디스크(session-history.json)에 저장하지 않는다
+# - 터미널 출력에는 토큰·프롬프트가 섞일 수 있다 (기본값이 false지만 명시해 둔다)
+pane_history = false

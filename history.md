@@ -5,6 +5,38 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-11-07 — Herdr TUI 설치 추가 (`-e herdr`, `config/herdr.toml`)
+
+### 배경
+
+Claude Code 등 코딩 에이전트를 여러 개 동시에 돌릴 때, tmux로는 어느 pane이 입력을 기다리는지
+알 수 없었습니다. Herdr는 에이전트 상태 표시와 알림을 기본 제공하는 멀티플렉서입니다.
+
+### 선택
+
+- **TUI(`herdr`)만 설치합니다.** Herdr에는 TUI, herdr-core(`hc`), 데스크톱 앱이라는 세 제품이 있습니다.
+  core와 앱은 2026-10에 나온 초기 버전이고, TUI와 에이전트를 공유하지 않습니다.
+  가장 오래 검증된 TUI만 들이고, core와 앱은 지켜보기로 했습니다.
+- 공식 설치 스크립트를 쓰기 전에 원문을 검토했습니다. sudo를 쓰지 않고 `~/.local/bin` 에만 설치하며,
+  SHA-256을 검증하고 셸 프로필을 수정하지 않습니다. 그래서 PATH 억제 옵션 없이 그대로 씁니다.
+- **보안 기본값을 저장소에서 관리합니다** (`config/herdr.toml`). Herdr 기본값 중에서
+  "사람이 보지 않는 사이에 바깥에서 동작이 바뀌거나 무언가 자동으로 실행되는 것"만 껐습니다.
+  - `update.manifest_check = false`: 원격 에이전트 감지 규칙을 자동 적용하지 않음
+  - `session.resume_agents_on_restore = false`: 서버 재시작 후 에이전트를 자동으로 재개하지 않음
+  - `remote.manage_ssh_config = false`: 자체 SSH 설정을 만들지 않음
+  - `onboarding = false`: 첫 실행 마법사가 링크된 설정 파일(= 저장소 파일)에 쓰는 것을 막음
+- `set_dotfiles()` 가 링크 전에 부모 디렉토리를 `mkdir -p` 하도록 바꿨습니다.
+  `~/.config/herdr/` 처럼 처음에는 없는 디렉토리 안으로 링크를 거는 첫 사례입니다.
+
+### 검증
+
+- 검증함: `bash -n setEnv.sh`, `bash -n setting_mac.sh`, `bash setEnv.sh -h` 출력,
+  `config/herdr.toml` TOML 파싱. 설정 키는 Herdr 저장소의 config reference(`config-reference.json`)와 대조했습니다.
+- 검증 안 함: `-e herdr` 실제 설치와, Herdr가 이 설정 파일을 경고 없이 읽는지 여부.
+  Herdr가 설정을 다시 쓸 때(`herdr config reset-keys` 등) 심볼릭 링크를 유지하는지도 확인하지 않았습니다.
+
+---
+
 ## 2026-08-19 — AWS 인증을 aws-vault 로 전환 (`functions/aws.zsh`)
 
 ### 배경

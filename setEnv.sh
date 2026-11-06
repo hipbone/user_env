@@ -5,8 +5,8 @@
 # Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2026-09-01                                          #
-# Version      : 2.3                                                 #
+# Last Update  : 2026-11-07                                          #
+# Version      : 2.4                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -34,7 +34,7 @@ print_help() {
   echo "지원되는 ENVIRONMENT"
   echo "  [셸 환경]"
   echo "    default                     기본 환경을 구성(zsh, oh-my-zsh, alias, functions)"
-  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k)"
+  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k, herdr)"
   echo ""
   echo "  [Windows 연동 - WSL 전용]"
   echo "    winpush                     저장소 설정을 Windows에 배포 (VS Code, Terminal)"
@@ -50,6 +50,7 @@ print_help() {
   echo "    uv                          uv(Python 패키지·버전 관리자)를 설치"
   echo "    nvm                         nvm(Node 버전 관리자)과 LTS Node를 설치"
   echo "    claude                      Claude Code(Anthropic 공식 CLI)를 설치"
+  echo "    herdr                       Herdr TUI(코딩 에이전트 멀티플렉서)를 설치하고 설정 연결"
 }
 
 ## OS 정보 가져오기
@@ -171,6 +172,7 @@ set_dotfiles() {
     "config/tmux.conf:${HOME}/.tmux.conf"
     "config/vimrc:${HOME}/.vimrc"
     "config/p10k.zsh:${HOME}/.p10k.zsh"
+    "config/herdr.toml:${HOME}/.config/herdr/config.toml"
   )
 
   local entry src dest
@@ -183,6 +185,8 @@ set_dotfiles() {
       continue
     fi
 
+    # ~/.config/<도구>/ 처럼 부모 디렉토리가 아직 없는 대상을 위해
+    mkdir -p "$(dirname "${dest}")"
     backup_if_real_file "${dest}"
     # -n : dest가 이미 디렉토리 심볼릭 링크일 때 그 안에 중첩 생성되는 것을 방지
     ln -fsn "${src}" "${dest}"
@@ -588,6 +592,45 @@ set_claude() {
   echo "PATH는 새 셸을 열거나 'exec zsh' 후 적용됩니다."
 }
 
+## Herdr TUI(코딩 에이전트 멀티플렉서) 설치
+## 공식 설치 스크립트를 사용한다.
+## - 실행 파일 하나를 ~/.local/bin/herdr 에 넣는다. sudo 불필요, 셸 프로필 수정 없음
+##   (PATH 안내만 출력하므로 억제 옵션이 필요 없다). 다운로드 파일은 SHA-256 으로 검증한다.
+## - 다시 실행하면 최신 버전으로 덮어쓰므로 멱등하다. 실행 중인 서버는 기존 바이너리로 계속 돈다.
+## - Herdr 앱 / herdr-core(hc)는 설치하지 않는다. TUI와 에이전트를 공유하지 않는 별도 제품이고,
+##   아직 초기 버전이라 TUI만 쓴다.
+## - 설정(config/herdr.toml)은 보안 기본값을 담고 있으며 set_dotfiles 가 링크한다.
+set_herdr() {
+  echo "Herdr TUI를 설치합니다..."
+
+  if command -v herdr &> /dev/null; then
+    echo "Herdr가 이미 설치되어 있습니다: $(herdr --version 2>/dev/null)"
+    echo "최신 버전으로 갱신합니다."
+  fi
+
+  # 설치 스크립트는 HERDR_INSTALL_DIR 이 없어도 ~/.local/bin 에 설치하지만, 위치를 명시해 둔다.
+  curl -fsSL https://herdr.dev/install.sh | env HERDR_INSTALL_DIR="${HOME}/.local/bin" sh || exit 1
+  export PATH="${HOME}/.local/bin:${PATH}"
+
+  if ! command -v herdr &> /dev/null; then
+    echo "Herdr 설치에 실패했습니다."
+    exit 1
+  fi
+
+  # 설정 파일 링크는 set_dotfiles 한 곳에서만 만든다 (전체 링크를 다시 걸어도 멱등)
+  set_dotfiles
+
+  echo ""
+  echo "Herdr 설치가 완료되었습니다: $(herdr --version 2>/dev/null)"
+  echo "  herdr               실행 (prefix 키 ctrl+b — tmux 안에서 실행하면 겹침)"
+  echo "  herdr update        수동 업데이트"
+  echo "  herdr --help        설정 파일 경로 확인"
+  echo "설정: ~/.config/herdr/config.toml -> ${repo_dir}/config/herdr.toml"
+  echo "  원격 감지 규칙 자동 갱신, 에이전트 자동 재개, 화면 기록 저장이 꺼져 있습니다."
+  echo "  플러그인 마켓플레이스는 검토된 카탈로그가 아니므로 코드를 읽고 설치하세요."
+  echo "PATH는 새 셸을 열거나 'exec zsh' 후 적용됩니다."
+}
+
 ## 특정 환경을 구성하는 작업을 수행
 configure_environment() {
   case "$1" in
@@ -639,6 +682,10 @@ configure_environment() {
   claude)
     echo "Claude Code를 설치하는 중입니다..."
     is_linux && set_claude
+    ;;
+  herdr)
+    echo "Herdr TUI를 설치하는 중입니다..."
+    is_linux && set_herdr
     ;;
   *)
     echo "알 수 없는 환경: $1"

@@ -84,6 +84,10 @@ set_link() {
     backup_if_real_file "${HOME}/.p10k.zsh"
     ln -fs "${repo_dir}/config/p10k.zsh" "${HOME}/.p10k.zsh"
 
+    mkdir -p "${HOME}/.config/herdr"
+    backup_if_real_file "${HOME}/.config/herdr/config.toml"
+    ln -fs "${repo_dir}/config/herdr.toml" "${HOME}/.config/herdr/config.toml"
+
     echo "설정 파일을 연결했습니다."
 }
 
