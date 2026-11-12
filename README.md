@@ -46,7 +46,7 @@ bash setEnv.sh -h             # 도움말
 | 환경 | 설명 |
 | --- | --- |
 | `default` | 기본 환경 구성 (zsh, oh-my-zsh, powerlevel10k, 플러그인, 홈 심볼릭 링크) |
-| `dotfiles` | 설정 파일만 홈에 다시 링크 (alias, functions, tmux, vim, p10k, herdr, claude) |
+| `dotfiles` | 설정 파일만 홈에 다시 링크 (alias, functions, tmux, vim, p10k, herdr, claude, codex) |
 
 **Windows 연동 (WSL 전용)**
 
@@ -68,7 +68,7 @@ bash setEnv.sh -h             # 도움말
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
 | `nvm` | nvm(Node 버전 관리자) 설치 + LTS Node 설치 (`~/.nvm`) |
 | `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) + 전역 지침·설정 링크 |
-| `codex` | Codex CLI(OpenAI 코딩 에이전트) 독립 설치 (`~/.local/bin`) + zsh 자동완성 |
+| `codex` | Codex CLI(OpenAI 코딩 에이전트) 독립 설치 (`~/.local/bin`) + zsh 자동완성 + 전역 지침 링크 |
 | `gitleaks` | gitleaks(git 비밀값 검사 도구) 릴리스 바이너리 설치 (`~/.local/bin`, SHA-256 검증) + zsh 자동완성 |
 | `herdr` | Herdr TUI(코딩 에이전트 멀티플렉서) 설치 (`~/.local/bin`) + 보안 기본 설정 링크 |
 
@@ -368,6 +368,25 @@ bash setEnv.sh -e codex
 
 첫 실행 시 `codex` 를 입력하고 **Sign in with ChatGPT** 를 선택합니다. (Plus / Pro / Business 등 ChatGPT 요금제 또는 API 키 필요)
 
+### 전역 지침 (`config/codex/`)
+
+설치 후 `set_dotfiles` 로 다음 파일을 링크합니다. 모든 프로젝트에 적용됩니다.
+
+| 저장소 | 홈 | 내용 |
+| --- | --- | --- |
+| `config/codex/AGENTS.md` | `~/.codex/AGENTS.md` | 공통 지침 (`config/claude/CLAUDE.md` 와 같은 규칙) |
+
+- 내용은 Claude용 `CLAUDE.md` 와 같은 규칙(한국어 응답, 커밋 서명 금지, 민감 파일 읽기 금지)이고,
+  도구 이름과 설정 설명만 Codex에 맞췄습니다. **한쪽을 고치면 다른 쪽도 함께 고치세요.**
+- Codex에는 Claude의 `permissions.deny` 같은 파일 단위 읽기 차단이 없어서, 민감 파일 보호는 지침에만 의존합니다.
+- Codex는 프로젝트 지침으로 `AGENTS.md` 를 읽고 `CLAUDE.md` 는 기본으로 읽지 않습니다.
+  `CLAUDE.md` 만 있는 저장소(이 저장소 포함)에서도 읽히게 하려면 `~/.codex/config.toml` 에 다음을 추가합니다.
+  (`config.toml` 은 Codex가 장비별 신뢰 경로 등을 직접 기록하므로 저장소에서 관리하지 않습니다.)
+
+  ```toml
+  project_doc_fallback_filenames = ["CLAUDE.md"]
+  ```
+
 ## gitleaks
 
 git 저장소의 커밋 이력·staged 변경에서 토큰, 키 같은 비밀값을 찾아내는 [gitleaks](https://github.com/gitleaks/gitleaks) 를 설치합니다.
@@ -432,6 +451,7 @@ bash setEnv.sh -e herdr
 | `config/claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
 | `config/claude/settings.json` | `~/.claude/settings.json` |
 | `config/claude/agents/` | `~/.claude/agents` |
+| `config/codex/AGENTS.md` | `~/.codex/AGENTS.md` |
 
 ### 복사 동기화 (Windows)
 
@@ -526,6 +546,7 @@ user_env/
 │
 ├── config/
 │   ├── claude/                   # → ~/.claude/{CLAUDE.md,settings.json,agents/} (Claude Code 전역)
+│   ├── codex/                    # → ~/.codex/AGENTS.md (Codex CLI 전역 지침)
 │   ├── herdr.toml                # → ~/.config/herdr/config.toml
 │   ├── p10k.zsh                  # → ~/.p10k.zsh
 │   ├── tmux.conf                 # → ~/.tmux.conf

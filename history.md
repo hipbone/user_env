@@ -5,6 +5,33 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-11-12 — Codex CLI 전역 지침을 저장소에서 관리 (`config/codex/AGENTS.md`)
+
+### 배경
+
+Codex CLI를 쓰기 시작했는데, 한국어 응답·커밋 서명 금지·민감 파일 읽기 금지 규칙이
+Claude용 `~/.claude/CLAUDE.md` 에만 있어 Codex 세션에는 적용되지 않았습니다.
+
+### 선택
+
+- `config/codex/AGENTS.md` 를 두고 `set_dotfiles()` 가 `~/.codex/AGENTS.md` 로 링크합니다.
+  `-e codex` 설치 후에도 `set_dotfiles` 를 호출합니다 (claude와 같은 방식).
+- **`CLAUDE.md` 를 그대로 같이 링크하지 않고 별도 파일로 뒀습니다.** 규칙은 같지만
+  Claude 전용 내용(`~/.claude/settings.json` 설명, "Read 도구", Claude 서명 예시)이 섞여 있어
+  Codex가 읽으면 맞지 않는 지시가 됩니다. 대신 두 파일 상단 주석과 `CLAUDE.md` §8 에 "함께 고칠 것" 을 남겼습니다.
+- Codex에는 `permissions.deny` 같은 파일 단위 읽기 차단이 없어, 민감 파일 목록에 `~/.codex/auth.json` 을
+  추가하고 "지침이 유일한 방어선" 임을 명시했습니다.
+- `~/.codex/config.toml` 은 저장소에서 관리하지 않습니다. Codex가 프로젝트 신뢰 경로 등 장비별 값을
+  직접 기록하므로 링크하면 저장소에 장비 경로가 섞입니다.
+  프로젝트 `CLAUDE.md` 를 Codex가 읽게 하는 `project_doc_fallback_filenames` 는 README에 수동 설정으로 안내했습니다.
+
+### 검증
+
+- `bash -n setEnv.sh`, `bash -n setting_mac.sh`, 링크 생성 후 확인.
+- **검증하지 않은 것**: Codex 세션에서 실제로 지침이 적용되는지(한국어 응답 등), `setting_mac.sh` 실행.
+
+---
+
 ## 2026-11-12 — Claude Code 서브 에이전트를 저장소에서 관리 (`config/claude/agents/`)
 
 ### 배경

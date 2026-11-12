@@ -41,6 +41,7 @@ repo/config/herdr.toml → ~/.config/herdr/config.toml
 repo/config/claude/CLAUDE.md     → ~/.claude/CLAUDE.md
 repo/config/claude/settings.json → ~/.claude/settings.json
 repo/config/claude/agents/       → ~/.claude/agents
+repo/config/codex/AGENTS.md      → ~/.codex/AGENTS.md
 ```
 
 - 이유: `git pull` 한 번으로 모든 장비의 설정이 갱신된다.
@@ -129,6 +130,8 @@ user_env/
 │   │   ├── CLAUDE.md             # → ~/.claude/CLAUDE.md (Claude Code 전역 지침)
 │   │   ├── settings.json         # → ~/.claude/settings.json (서명 제거, 민감 파일 Read 차단)
 │   │   └── agents/               # → ~/.claude/agents (전역 서브 에이전트, 디렉토리 링크)
+│   ├── codex/
+│   │   └── AGENTS.md             # → ~/.codex/AGENTS.md (Codex CLI 전역 지침, claude/CLAUDE.md 와 같은 규칙)
 │   ├── herdr.toml                # → ~/.config/herdr/config.toml (보안 기본값)
 │   ├── p10k.zsh                  # → ~/.p10k.zsh   (프롬프트 동일성)
 │   ├── tmux.conf                 # → ~/.tmux.conf
@@ -376,12 +379,14 @@ zsh -i -c 'type mkcd; type k'      # 로드 결과 확인
   문법 확인은 §6의 검증 명령을 쓴다.
 - **심볼릭 링크를 실수로 끊지 말 것.** `~/.zshrc`, `~/alias`, `~/functions`, `~/.vimrc`,
   `~/.tmux.conf`, `~/.p10k.zsh`, `~/.config/herdr/config.toml`, `~/.claude/CLAUDE.md`,
-  `~/.claude/settings.json`, `~/.claude/agents` 는 모두 이 저장소를 가리키는 링크다.
+  `~/.claude/settings.json`, `~/.claude/agents`, `~/.codex/AGENTS.md` 는 모두 이 저장소를 가리키는 링크다.
 - **서브 에이전트 정의(`config/claude/agents/*.md`)에 사내 도메인·IP·계정명을 적지 않는다.**
   `~/.claude/agents` 가 디렉토리 링크라서 `/agents` 로 만든 파일이 곧바로 이 저장소에 생긴다.
   홈 쪽 파일을 직접 편집하는 대신 저장소 원본을 편집한다.
 - **`~/.env_vars`, `/etc/zsh/alias.sh` 를 읽거나 커밋하지 않는다.**
 - **`config/p10k.zsh` 를 손으로 고치지 않는다.** `p10k configure` 로 생성되는 파일이므로
   프롬프트를 바꿨으면 `cp ~/.p10k.zsh config/p10k.zsh` 가 아니라 링크가 이미 걸려 있으니 그대로 커밋하면 된다.
+- **전역 지침 동기화.** `config/claude/CLAUDE.md` 와 `config/codex/AGENTS.md` 는 같은 규칙을 담는다.
+  응답·커밋·민감 정보 규칙을 바꾸면 두 파일을 함께 고친다.
 - **문서 동기화.** `setEnv.sh`의 옵션이나 alias/config 구조를 바꾸면 `README.md`와 이 문서를 함께 갱신한다.
 - **한국어로 응답·작성한다.**

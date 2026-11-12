@@ -6,7 +6,7 @@
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
 # Last Update  : 2026-11-12                                          #
-# Version      : 2.7                                                 #
+# Version      : 2.8                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -34,7 +34,7 @@ print_help() {
   echo "지원되는 ENVIRONMENT"
   echo "  [셸 환경]"
   echo "    default                     기본 환경을 구성(zsh, oh-my-zsh, alias, functions)"
-  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k, herdr, claude)"
+  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k, herdr, claude, codex)"
   echo ""
   echo "  [Windows 연동 - WSL 전용]"
   echo "    winpush                     저장소 설정을 Windows에 배포 (VS Code, Terminal)"
@@ -180,6 +180,8 @@ set_dotfiles() {
     "config/claude/settings.json:${HOME}/.claude/settings.json"
     # 서브 에이전트 정의 (디렉토리째 링크 → /agents 로 새로 만든 것도 저장소에 바로 생긴다)
     "config/claude/agents:${HOME}/.claude/agents"
+    # Codex CLI 전역 지침 (CLAUDE.md 와 같은 규칙, 도구 이름만 다름)
+    "config/codex/AGENTS.md:${HOME}/.codex/AGENTS.md"
   )
 
   local entry src dest
@@ -641,6 +643,9 @@ set_codex() {
   # zsh 자동완성 (zshrc_* 가 fpath+=~/.zfunc 로 등록)
   mkdir -p "${HOME}/.zfunc"
   codex completion zsh > "${HOME}/.zfunc/_codex"
+
+  # 전역 지침(~/.codex/AGENTS.md) 링크는 set_dotfiles 한 곳에서만 만든다
+  set_dotfiles
 
   echo ""
   echo "Codex CLI 설치가 완료되었습니다: $(codex --version 2>/dev/null)"

@@ -96,6 +96,10 @@ set_link() {
     backup_if_real_file "${HOME}/.claude/agents"
     ln -fsn "${repo_dir}/config/claude/agents" "${HOME}/.claude/agents"
 
+    mkdir -p "${HOME}/.codex"
+    backup_if_real_file "${HOME}/.codex/AGENTS.md"
+    ln -fs "${repo_dir}/config/codex/AGENTS.md" "${HOME}/.codex/AGENTS.md"
+
     echo "설정 파일을 연결했습니다."
 }
 
