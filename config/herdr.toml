@@ -35,3 +35,7 @@ manage_ssh_config = false
 # pane 화면 기록을 디스크(session-history.json)에 저장하지 않는다
 # - 터미널 출력에는 토큰·프롬프트가 섞일 수 있다 (기본값이 false지만 명시해 둔다)
 pane_history = false
+
+[theme]
+name = "dracula"
+auto_switch = false
