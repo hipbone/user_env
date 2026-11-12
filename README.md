@@ -46,7 +46,7 @@ bash setEnv.sh -h             # 도움말
 | 환경 | 설명 |
 | --- | --- |
 | `default` | 기본 환경 구성 (zsh, oh-my-zsh, powerlevel10k, 플러그인, 홈 심볼릭 링크) |
-| `dotfiles` | 설정 파일만 홈에 다시 링크 (alias, functions, tmux, vim, p10k, herdr) |
+| `dotfiles` | 설정 파일만 홈에 다시 링크 (alias, functions, tmux, vim, p10k, herdr, claude) |
 
 **Windows 연동 (WSL 전용)**
 
@@ -67,7 +67,7 @@ bash setEnv.sh -h             # 도움말
 | `go` | Go(golang) 공식 바이너리 설치 (`/usr/local/go`) |
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
 | `nvm` | nvm(Node 버전 관리자) 설치 + LTS Node 설치 (`~/.nvm`) |
-| `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) |
+| `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) + 전역 지침·설정 링크 |
 | `codex` | Codex CLI(OpenAI 코딩 에이전트) 독립 설치 (`~/.local/bin`) + zsh 자동완성 |
 | `herdr` | Herdr TUI(코딩 에이전트 멀티플렉서) 설치 (`~/.local/bin`) + 보안 기본 설정 링크 |
 
@@ -332,6 +332,20 @@ bash setEnv.sh -e claude
 
 첫 실행 시 `claude` 를 입력하면 브라우저 로그인이 뜹니다. (Pro / Max / Team / Enterprise / Console 계정 필요)
 
+### 전역 지침·설정 (`config/claude/`)
+
+설치 후 `set_dotfiles` 로 다음 두 파일을 링크합니다. 모든 프로젝트에 적용됩니다.
+
+| 저장소 | 홈 | 내용 |
+| --- | --- | --- |
+| `config/claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | 공통 지침 (한국어 응답, 커밋 서명 금지, 민감 파일 읽기 금지) |
+| `config/claude/settings.json` | `~/.claude/settings.json` | `attribution` 으로 커밋/PR 서명 제거, `permissions.deny` 로 민감 파일 Read 차단 |
+
+- `permissions.deny` 의 `Read(...)` 규칙은 Read 같은 내장 도구에만 적용되고, Bash(`cat` 등)는 막지 못합니다.
+  Bash 쪽은 `CLAUDE.md` 지침에 의존합니다. OS 수준 차단이 필요하면 `sandbox.enabled` 를 켜야 합니다.
+- `*.tfstate` 도 막으므로 terraform state는 `terraform show` 출력으로 확인합니다.
+- `/config` 등으로 Claude Code가 `settings.json` 을 고치면 링크를 따라 저장소 파일이 바뀝니다. `git diff` 로 확인 후 커밋하세요.
+
 ## Codex CLI
 
 OpenAI의 코딩 에이전트 CLI(`codex`)를 [공식 독립 설치 스크립트](https://github.com/openai/codex)로 설치합니다.
@@ -394,6 +408,8 @@ bash setEnv.sh -e herdr
 | `config/vimrc` | `~/.vimrc` |
 | `config/p10k.zsh` | `~/.p10k.zsh` |
 | `config/herdr.toml` | `~/.config/herdr/config.toml` |
+| `config/claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
+| `config/claude/settings.json` | `~/.claude/settings.json` |
 
 ### 복사 동기화 (Windows)
 
@@ -487,6 +503,7 @@ user_env/
 ├── functions/                    # → ~/functions (common, python, aws, tencent)
 │
 ├── config/
+│   ├── claude/                   # → ~/.claude/{CLAUDE.md,settings.json} (Claude Code 전역)
 │   ├── herdr.toml                # → ~/.config/herdr/config.toml
 │   ├── p10k.zsh                  # → ~/.p10k.zsh
 │   ├── tmux.conf                 # → ~/.tmux.conf

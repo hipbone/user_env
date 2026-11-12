@@ -5,6 +5,38 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-11-12 — Claude Code 전역 지침·설정을 저장소에서 관리 (`config/claude/`)
+
+### 배경
+
+커밋에서 Claude 서명을 빼는 규칙과 민감 파일을 읽지 않는 규칙이 이 저장소의 `CLAUDE.md` 와
+이 저장소 전용 메모리에만 있었습니다. 그래서 다른 저장소(terraform, puppet 등)에서는 적용되지 않았고,
+Claude Code가 보내는 기본 서명 지시가 그대로 살아 있었습니다.
+
+### 선택
+
+- `~/.claude/CLAUDE.md`(전역 지침)와 `~/.claude/settings.json`(전역 설정)을 `config/claude/` 에 두고
+  `set_dotfiles()` 가 링크합니다. 새 장비에서도 `-e dotfiles` 또는 `-e claude` 한 번으로 같은 규칙이 적용됩니다.
+- **서명 제거는 `settings.json` 의 `attribution`(commit/pr 빈 문자열, sessionUrl false)으로 합니다.**
+  CLAUDE.md 지침만으로는 Claude Code가 보내는 서명 지시와 충돌하므로, 지시 자체가 나오지 않게 설정에서 끕니다.
+- **민감 파일은 `permissions.deny` 의 `Read(...)` 규칙으로 막습니다** (`~/.env_vars`, `/etc/zsh/alias.sh`,
+  `~/.ssh`, `~/.aws/credentials`, `~/.tccli`, `.env`, `*.tfvars`, `*.tfstate`, `*.pem`, `*.key` 등).
+  이 규칙은 내장 Read 도구에만 적용되고 Bash(`cat` 등)는 막지 못하므로, 전역 `CLAUDE.md` 에
+  "Bash로도 읽지 말 것" 을 함께 적었습니다. sandbox는 모든 Bash 명령에 영향을 주므로 켜지 않았습니다.
+- `/etc/zsh/alias.sh` 는 규칙에서 `//etc/zsh/alias.sh` 로 적습니다. `/` 하나로 시작하면 설정 파일 기준 상대 경로가 됩니다.
+- `-e claude` 설치 후에도 `set_dotfiles` 를 호출하도록 했습니다 (herdr와 같은 방식).
+- 이 저장소 전용 메모리 `no-claude-coauthor` 는 전역 설정과 겹쳐서 삭제했습니다.
+
+### 검증
+
+- `bash -n setEnv.sh`, `jq` 로 `settings.json` 문법 확인, `-e dotfiles` 실행 후 링크 확인.
+- **검증하지 않은 것**: Claude Code가 `/config` 등으로 `settings.json` 을 저장할 때 링크를 따라 쓰는지,
+  링크를 실제 파일로 바꿔 버리는지. 링크가 풀려 있으면 `-e dotfiles` 를 다시 실행하면 됩니다
+  (실제 파일은 `.bak` 으로 백업됨).
+- deny 규칙이 실제로 Read를 막는지는 새 세션에서 확인이 필요합니다.
+
+---
+
 ## 2026-11-07 — Herdr TUI 설치 추가 (`-e herdr`, `config/herdr.toml`)
 
 ### 배경

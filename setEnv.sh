@@ -34,7 +34,7 @@ print_help() {
   echo "지원되는 ENVIRONMENT"
   echo "  [셸 환경]"
   echo "    default                     기본 환경을 구성(zsh, oh-my-zsh, alias, functions)"
-  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k, herdr)"
+  echo "    dotfiles                    설정 파일을 홈에 심볼릭 링크 (tmux, vim, p10k, herdr, claude)"
   echo ""
   echo "  [Windows 연동 - WSL 전용]"
   echo "    winpush                     저장소 설정을 Windows에 배포 (VS Code, Terminal)"
@@ -174,6 +174,9 @@ set_dotfiles() {
     "config/vimrc:${HOME}/.vimrc"
     "config/p10k.zsh:${HOME}/.p10k.zsh"
     "config/herdr.toml:${HOME}/.config/herdr/config.toml"
+    # Claude Code 전역 지침·설정 (서명 제거, 민감 파일 읽기 차단)
+    "config/claude/CLAUDE.md:${HOME}/.claude/CLAUDE.md"
+    "config/claude/settings.json:${HOME}/.claude/settings.json"
   )
 
   local entry src dest
@@ -584,6 +587,9 @@ set_claude() {
     echo "Claude Code 설치에 실패했습니다."
     exit 1
   fi
+
+  # 전역 지침·설정(~/.claude/CLAUDE.md, settings.json) 링크는 set_dotfiles 한 곳에서만 만든다
+  set_dotfiles
 
   echo ""
   echo "Claude Code 설치가 완료되었습니다: $(claude --version 2>/dev/null)"

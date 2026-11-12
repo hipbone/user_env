@@ -88,6 +88,12 @@ set_link() {
     backup_if_real_file "${HOME}/.config/herdr/config.toml"
     ln -fs "${repo_dir}/config/herdr.toml" "${HOME}/.config/herdr/config.toml"
 
+    mkdir -p "${HOME}/.claude"
+    backup_if_real_file "${HOME}/.claude/CLAUDE.md"
+    ln -fs "${repo_dir}/config/claude/CLAUDE.md" "${HOME}/.claude/CLAUDE.md"
+    backup_if_real_file "${HOME}/.claude/settings.json"
+    ln -fs "${repo_dir}/config/claude/settings.json" "${HOME}/.claude/settings.json"
+
     echo "설정 파일을 연결했습니다."
 }
 

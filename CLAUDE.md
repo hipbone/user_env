@@ -38,6 +38,8 @@ repo/config/tmux.conf →  ~/.tmux.conf
 repo/config/vimrc     →  ~/.vimrc
 repo/config/p10k.zsh  →  ~/.p10k.zsh
 repo/config/herdr.toml → ~/.config/herdr/config.toml
+repo/config/claude/CLAUDE.md     → ~/.claude/CLAUDE.md
+repo/config/claude/settings.json → ~/.claude/settings.json
 ```
 
 - 이유: `git pull` 한 번으로 모든 장비의 설정이 갱신된다.
@@ -122,6 +124,9 @@ user_env/
 │   └── tencent.zsh               #   tc-profiles, tc-use, tc-assume, tc-unassume, tc-env, tc-cvm-grep
 │
 ├── config/
+│   ├── claude/
+│   │   ├── CLAUDE.md             # → ~/.claude/CLAUDE.md (Claude Code 전역 지침)
+│   │   └── settings.json         # → ~/.claude/settings.json (서명 제거, 민감 파일 Read 차단)
 │   ├── herdr.toml                # → ~/.config/herdr/config.toml (보안 기본값)
 │   ├── p10k.zsh                  # → ~/.p10k.zsh   (프롬프트 동일성)
 │   ├── tmux.conf                 # → ~/.tmux.conf
@@ -368,7 +373,8 @@ zsh -i -c 'type mkcd; type k'      # 로드 결과 확인
   검증 목적으로 설치 계열(`-e go`, `-e brew`, `-e winpush`)을 임의 실행하지 말 것.
   문법 확인은 §6의 검증 명령을 쓴다.
 - **심볼릭 링크를 실수로 끊지 말 것.** `~/.zshrc`, `~/alias`, `~/functions`, `~/.vimrc`,
-  `~/.tmux.conf`, `~/.p10k.zsh`, `~/.config/herdr/config.toml` 는 모두 이 저장소를 가리키는 링크다.
+  `~/.tmux.conf`, `~/.p10k.zsh`, `~/.config/herdr/config.toml`, `~/.claude/CLAUDE.md`,
+  `~/.claude/settings.json` 는 모두 이 저장소를 가리키는 링크다.
   홈 쪽 파일을 직접 편집하는 대신 저장소 원본을 편집한다.
 - **`~/.env_vars`, `/etc/zsh/alias.sh` 를 읽거나 커밋하지 않는다.**
 - **`config/p10k.zsh` 를 손으로 고치지 않는다.** `p10k configure` 로 생성되는 파일이므로
