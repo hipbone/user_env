@@ -39,3 +39,27 @@ pane_history = false
 [theme]
 name = "dracula"
 auto_switch = false
+
+[keys]
+# 기본값이 비어 있는(unset) 액션에 키를 붙인다. 나머지 키는 Herdr 기본값을 따른다.
+# - WSL + Windows Terminal에서는 prefix 없는 조합(ctrl+alt+…)을 터미널이 가로채는 경우가 많아 prefix 조합을 쓴다
+# 에이전트 사이 이동 (입력 대기 중인 에이전트를 빠르게 확인)
+next_agent = "prefix+a"
+previous_agent = "prefix+shift+a"
+focus_agent = "prefix+alt+1..9"
+# 직전 pane으로 돌아가기 (tmux의 prefix ; 와 같은 역할)
+# - prefix+tab 은 기본값 cycle_pane_next 가 쓰고 있어서 쓰지 않는다
+last_pane = "prefix+semicolon"
+# workspace 이동
+next_workspace = "prefix+shift+right"
+previous_workspace = "prefix+shift+left"
+# 화면 지우기
+clear_pane = "prefix+ctrl+k"
+
+[[keys.command]]
+# lazygit 을 팝업으로 띄운다 (lazygit 이 설치되지 않은 장비에서는 팝업에 에러만 뜨고 끝난다)
+key = "prefix+alt+g"
+type = "popup"
+command = "lazygit"
+width = "80%"
+height = "80%"
