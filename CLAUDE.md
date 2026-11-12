@@ -167,7 +167,7 @@ bash setEnv.sh -e winpush      # 저장소 → Windows
 bash setEnv.sh -e winpull      # Windows → 저장소
 
 # 도구 설치
-bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv|nvm|claude|codex|herdr
+bash setEnv.sh -e opentofu|awscli|brew|tccli|coscli|go|uv|nvm|claude|codex|gitleaks|herdr
 ```
 
 ### 언어 런타임 관리 방침

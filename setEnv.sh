@@ -6,7 +6,7 @@
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
 # Last Update  : 2026-11-12                                          #
-# Version      : 2.5                                                 #
+# Version      : 2.6                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -51,6 +51,7 @@ print_help() {
   echo "    nvm                         nvm(Node 버전 관리자)과 LTS Node를 설치"
   echo "    claude                      Claude Code(Anthropic 공식 CLI)를 설치"
   echo "    codex                       Codex CLI(OpenAI 코딩 에이전트)를 설치"
+  echo "    gitleaks                    gitleaks(git 비밀값 검사 도구)를 설치"
   echo "    herdr                       Herdr TUI(코딩 에이전트 멀티플렉서)를 설치하고 설정 연결"
 }
 
@@ -647,6 +648,79 @@ set_codex() {
   echo "PATH와 자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
 }
 
+## gitleaks(git 저장소 비밀값 검사 도구) 설치
+## GitHub 릴리스의 공식 바이너리를 ~/.local/bin/gitleaks 에 설치한다.
+## - 공식 설치 스크립트가 없고, apt 패키지는 버전이 많이 뒤처지므로 릴리스 바이너리를 쓴다.
+## - sudo 없이 ~/.local/bin 에 둔다 (zshrc_ubuntu 가 조건부로 PATH에 추가).
+## - 릴리스의 checksums.txt 로 SHA-256 을 검증한 뒤 설치한다.
+## - 최신 태그는 GitHub API 대신 git ls-remote 로 조회한다 (비인증 API rate limit 회피, set_nvm 과 같은 방식).
+## - 다시 실행하면 최신 버전으로 덮어쓰므로 멱등하다.
+set_gitleaks() {
+  echo "gitleaks를 설치합니다..."
+  get_arch
+
+  # 릴리스 파일명은 amd64 대신 x64 를 쓴다
+  local gl_arch
+  case "${ARCH_ALIAS}" in
+    amd64) gl_arch="x64" ;;
+    arm64) gl_arch="arm64" ;;
+  esac
+
+  # 정식 릴리스 태그만 고른다 (vX.Y.Z)
+  local gl_tag
+  gl_tag=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/gitleaks/gitleaks.git 'v*' \
+    | sed 's|.*/||' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+  if [ -z "${gl_tag}" ]; then
+    echo "gitleaks 최신 버전 정보를 가져오지 못했습니다."
+    exit 1
+  fi
+  local gl_version="${gl_tag#v}"
+
+  if command -v gitleaks &> /dev/null; then
+    echo "gitleaks가 이미 설치되어 있습니다: $(gitleaks version 2>/dev/null)"
+  fi
+  echo "설치할 버전: ${gl_tag} (${gl_arch})"
+
+  local gl_tarball="gitleaks_${gl_version}_linux_${gl_arch}.tar.gz"
+  local gl_checksums="gitleaks_${gl_version}_checksums.txt"
+  local gl_base="https://github.com/gitleaks/gitleaks/releases/download/${gl_tag}"
+  local work_dir="${tmp_dir}/gitleaks"
+
+  rm -rf "${work_dir}"
+  mkdir -p "${work_dir}"
+  curl -fsSL "${gl_base}/${gl_tarball}" -o "${work_dir}/${gl_tarball}" || exit 1
+  curl -fsSL "${gl_base}/${gl_checksums}" -o "${work_dir}/${gl_checksums}" || exit 1
+
+  # 체크섬 검증 (해당 파일 줄만 골라 sha256sum -c)
+  if ! (cd "${work_dir}" && grep " ${gl_tarball}\$" "${gl_checksums}" | sha256sum -c --status -); then
+    echo "gitleaks 체크섬 검증에 실패했습니다."
+    rm -rf "${work_dir}"
+    exit 1
+  fi
+
+  tar -xzf "${work_dir}/${gl_tarball}" -C "${work_dir}" gitleaks || exit 1
+  mkdir -p "${HOME}/.local/bin"
+  install -m 755 "${work_dir}/gitleaks" "${HOME}/.local/bin/gitleaks"
+  rm -rf "${work_dir}"
+  export PATH="${HOME}/.local/bin:${PATH}"
+
+  if ! command -v gitleaks &> /dev/null; then
+    echo "gitleaks 설치에 실패했습니다."
+    exit 1
+  fi
+
+  # zsh 자동완성 (zshrc_* 가 fpath+=~/.zfunc 로 등록)
+  mkdir -p "${HOME}/.zfunc"
+  gitleaks completion zsh > "${HOME}/.zfunc/_gitleaks"
+
+  echo ""
+  echo "gitleaks 설치가 완료되었습니다: $(gitleaks version 2>/dev/null)"
+  echo "  gitleaks git -v                  현재 저장소의 커밋 이력 전체 검사"
+  echo "  gitleaks git --staged -v         커밋 전 staged 변경만 검사"
+  echo "  gitleaks dir <경로> -v           git이 아닌 디렉토리 검사"
+  echo "PATH와 자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
+}
+
 ## Herdr TUI(코딩 에이전트 멀티플렉서) 설치
 ## 공식 설치 스크립트를 사용한다.
 ## - 실행 파일 하나를 ~/.local/bin/herdr 에 넣는다. sudo 불필요, 셸 프로필 수정 없음
@@ -741,6 +815,10 @@ configure_environment() {
   codex)
     echo "Codex CLI를 설치하는 중입니다..."
     is_linux && set_codex
+    ;;
+  gitleaks)
+    echo "gitleaks를 설치하는 중입니다..."
+    is_linux && set_gitleaks
     ;;
   herdr)
     echo "Herdr TUI를 설치하는 중입니다..."

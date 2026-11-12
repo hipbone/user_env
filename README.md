@@ -69,6 +69,7 @@ bash setEnv.sh -h             # 도움말
 | `nvm` | nvm(Node 버전 관리자) 설치 + LTS Node 설치 (`~/.nvm`) |
 | `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) + 전역 지침·설정 링크 |
 | `codex` | Codex CLI(OpenAI 코딩 에이전트) 독립 설치 (`~/.local/bin`) + zsh 자동완성 |
+| `gitleaks` | gitleaks(git 비밀값 검사 도구) 릴리스 바이너리 설치 (`~/.local/bin`, SHA-256 검증) + zsh 자동완성 |
 | `herdr` | Herdr TUI(코딩 에이전트 멀티플렉서) 설치 (`~/.local/bin`) + 보안 기본 설정 링크 |
 
 `default` 실행 시 동작:
@@ -364,6 +365,24 @@ bash setEnv.sh -e codex
 > PATH를 미리 잡아 두고, 다른 경로의 codex가 있으면 제거 안내를 출력하고 중단합니다.
 
 첫 실행 시 `codex` 를 입력하고 **Sign in with ChatGPT** 를 선택합니다. (Plus / Pro / Business 등 ChatGPT 요금제 또는 API 키 필요)
+
+## gitleaks
+
+git 저장소의 커밋 이력·staged 변경에서 토큰, 키 같은 비밀값을 찾아내는 [gitleaks](https://github.com/gitleaks/gitleaks) 를 설치합니다.
+
+```bash
+bash setEnv.sh -e gitleaks
+```
+
+- GitHub 최신 릴리스의 공식 바이너리를 받아 `checksums.txt` 로 SHA-256 을 검증한 뒤 `~/.local/bin/gitleaks` 에 넣습니다. sudo 불필요.
+- 공식 설치 스크립트가 없고 apt 패키지는 버전이 많이 뒤처져서 릴리스 바이너리를 씁니다.
+- zsh 자동완성을 `~/.zfunc/_gitleaks` 로 생성합니다. 다시 실행하면 최신 버전으로 갱신합니다.
+
+```bash
+gitleaks git -v                # 현재 저장소의 커밋 이력 전체 검사
+gitleaks git --staged -v       # 커밋 전 staged 변경만 검사
+gitleaks dir <경로> -v         # git이 아닌 디렉토리 검사
+```
 
 ## Herdr
 
