@@ -93,6 +93,8 @@ set_link() {
     ln -fs "${repo_dir}/config/claude/CLAUDE.md" "${HOME}/.claude/CLAUDE.md"
     backup_if_real_file "${HOME}/.claude/settings.json"
     ln -fs "${repo_dir}/config/claude/settings.json" "${HOME}/.claude/settings.json"
+    backup_if_real_file "${HOME}/.claude/agents"
+    ln -fsn "${repo_dir}/config/claude/agents" "${HOME}/.claude/agents"
 
     echo "설정 파일을 연결했습니다."
 }

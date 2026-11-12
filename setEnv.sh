@@ -6,7 +6,7 @@
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
 # Last Update  : 2026-11-12                                          #
-# Version      : 2.6                                                 #
+# Version      : 2.7                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -178,6 +178,8 @@ set_dotfiles() {
     # Claude Code 전역 지침·설정 (서명 제거, 민감 파일 읽기 차단)
     "config/claude/CLAUDE.md:${HOME}/.claude/CLAUDE.md"
     "config/claude/settings.json:${HOME}/.claude/settings.json"
+    # 서브 에이전트 정의 (디렉토리째 링크 → /agents 로 새로 만든 것도 저장소에 바로 생긴다)
+    "config/claude/agents:${HOME}/.claude/agents"
   )
 
   local entry src dest
@@ -589,7 +591,7 @@ set_claude() {
     exit 1
   fi
 
-  # 전역 지침·설정(~/.claude/CLAUDE.md, settings.json) 링크는 set_dotfiles 한 곳에서만 만든다
+  # 전역 지침·설정·에이전트(~/.claude/CLAUDE.md, settings.json, agents/) 링크는 set_dotfiles 한 곳에서만 만든다
   set_dotfiles
 
   echo ""

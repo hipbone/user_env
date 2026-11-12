@@ -335,16 +335,18 @@ bash setEnv.sh -e claude
 
 ### 전역 지침·설정 (`config/claude/`)
 
-설치 후 `set_dotfiles` 로 다음 두 파일을 링크합니다. 모든 프로젝트에 적용됩니다.
+설치 후 `set_dotfiles` 로 다음 파일·디렉토리를 링크합니다. 모든 프로젝트에 적용됩니다.
 
 | 저장소 | 홈 | 내용 |
 | --- | --- | --- |
 | `config/claude/CLAUDE.md` | `~/.claude/CLAUDE.md` | 공통 지침 (한국어 응답, 커밋 서명 금지, 민감 파일 읽기 금지) |
 | `config/claude/settings.json` | `~/.claude/settings.json` | `attribution` 으로 커밋/PR 서명 제거, `permissions.deny` 로 민감 파일 Read 차단 |
+| `config/claude/agents/` | `~/.claude/agents` | 전역 서브 에이전트 (code-reviewer, committer, notion-writer, secret-guard, test-runner) |
 
 - `permissions.deny` 의 `Read(...)` 규칙은 Read 같은 내장 도구에만 적용되고, Bash(`cat` 등)는 막지 못합니다.
   Bash 쪽은 `CLAUDE.md` 지침에 의존합니다. OS 수준 차단이 필요하면 `sandbox.enabled` 를 켜야 합니다.
 - `*.tfstate` 도 막으므로 terraform state는 `terraform show` 출력으로 확인합니다.
+- `agents/` 는 디렉토리째 링크하므로 `/agents` 로 새로 만든 에이전트도 저장소에 바로 생깁니다. 커밋 전에 비밀 정보나 사내 정보가 없는지 확인하세요.
 - `/config` 등으로 Claude Code가 `settings.json` 을 고치면 링크를 따라 저장소 파일이 바뀝니다. `git diff` 로 확인 후 커밋하세요.
 
 ## Codex CLI
@@ -429,6 +431,7 @@ bash setEnv.sh -e herdr
 | `config/herdr.toml` | `~/.config/herdr/config.toml` |
 | `config/claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
 | `config/claude/settings.json` | `~/.claude/settings.json` |
+| `config/claude/agents/` | `~/.claude/agents` |
 
 ### 복사 동기화 (Windows)
 
@@ -522,7 +525,7 @@ user_env/
 ├── functions/                    # → ~/functions (common, python, aws, tencent)
 │
 ├── config/
-│   ├── claude/                   # → ~/.claude/{CLAUDE.md,settings.json} (Claude Code 전역)
+│   ├── claude/                   # → ~/.claude/{CLAUDE.md,settings.json,agents/} (Claude Code 전역)
 │   ├── herdr.toml                # → ~/.config/herdr/config.toml
 │   ├── p10k.zsh                  # → ~/.p10k.zsh
 │   ├── tmux.conf                 # → ~/.tmux.conf

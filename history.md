@@ -5,6 +5,29 @@ alias 한두 개 추가 같은 일상적인 변경은 `git log` 로 충분하므
 
 ---
 
+## 2026-11-12 — Claude Code 서브 에이전트를 저장소에서 관리 (`config/claude/agents/`)
+
+### 배경
+
+`~/.claude/agents/` 에 만든 전역 서브 에이전트(code-reviewer, committer, notion-writer, secret-guard,
+test-runner)가 이 장비에만 있었습니다. 전역 지침·설정과 같은 이유로 저장소로 옮겼습니다.
+
+### 선택
+
+- **파일 단위가 아니라 디렉토리째 링크합니다** (`config/claude/agents` → `~/.claude/agents`, `ln -fsn`).
+  `/agents` 로 새 에이전트를 만들면 별도 작업 없이 저장소에 생기고, `links` 배열을 매번 고칠 필요가 없습니다.
+  대신 만든 파일이 곧바로 커밋 대상이 되므로, 커밋 전에 사내 정보가 섞이지 않았는지 확인해야 합니다.
+- `secret-guard.md` 에 있던 회사 도메인은 지우고 "`git config user.email` 이 개인 메일이 아니면 그 도메인" 으로
+  바꿨습니다. 이 저장소는 공개 가능성을 전제로 하므로 사내 도메인을 적지 않습니다.
+- 기존 `~/.claude/agents/` 실제 디렉토리는 `backup_if_real_file` 이 `agents.bak` 으로 옮깁니다.
+
+### 검증
+
+- `bash -n setEnv.sh setting_mac.sh`, `-e dotfiles` 실행 후 링크와 내용(`.bak` 과 diff) 확인.
+- **검증하지 않은 것**: 링크된 디렉토리에서 Claude Code가 에이전트를 정상 인식하는지는 새 세션에서 `/agents` 로 확인 필요.
+
+---
+
 ## 2026-11-12 — Claude Code 전역 지침·설정을 저장소에서 관리 (`config/claude/`)
 
 ### 배경
