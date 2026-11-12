@@ -68,6 +68,7 @@ bash setEnv.sh -h             # 도움말
 | `uv` | uv 설치 + zsh 자동완성 + 최신 Python 설치 |
 | `nvm` | nvm(Node 버전 관리자) 설치 + LTS Node 설치 (`~/.nvm`) |
 | `claude` | Claude Code(Anthropic 공식 CLI) 네이티브 설치 (`~/.local/bin`, 백그라운드 자동 업데이트) |
+| `codex` | Codex CLI(OpenAI 코딩 에이전트) 독립 설치 (`~/.local/bin`) + zsh 자동완성 |
 | `herdr` | Herdr TUI(코딩 에이전트 멀티플렉서) 설치 (`~/.local/bin`) + 보안 기본 설정 링크 |
 
 `default` 실행 시 동작:
@@ -330,6 +331,25 @@ bash setEnv.sh -e claude
 - npm 전역 설치는 쓰지 않습니다. Node 런타임 의존을 새 장비에 강요하지 않기 위해 uv/tccli와 같은 방침입니다.
 
 첫 실행 시 `claude` 를 입력하면 브라우저 로그인이 뜹니다. (Pro / Max / Team / Enterprise / Console 계정 필요)
+
+## Codex CLI
+
+OpenAI의 코딩 에이전트 CLI(`codex`)를 [공식 독립 설치 스크립트](https://github.com/openai/codex)로 설치합니다.
+
+```bash
+bash setEnv.sh -e codex
+```
+
+- 실행 파일은 `~/.local/bin/codex` 에 설치됩니다 (`~/.codex/packages/standalone/` 로의 심볼릭 링크).
+- zsh 자동완성을 `~/.zfunc/_codex` 로 생성합니다.
+- 다시 실행하면 최신 버전으로 갱신합니다.
+- npm 전역 설치는 쓰지 않습니다 (Claude Code와 같은 방침).
+
+> 설치 스크립트는 `~/.local/bin` 이 PATH에 없거나 npm/brew로 설치된 codex가 이미 있으면
+> `~/.zshrc` 에 PATH 블록을 직접 추가합니다. zshrc는 git으로 관리되므로 `set_codex` 는
+> PATH를 미리 잡아 두고, 다른 경로의 codex가 있으면 제거 안내를 출력하고 중단합니다.
+
+첫 실행 시 `codex` 를 입력하고 **Sign in with ChatGPT** 를 선택합니다. (Plus / Pro / Business 등 ChatGPT 요금제 또는 API 키 필요)
 
 ## Herdr
 

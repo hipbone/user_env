@@ -5,8 +5,8 @@
 # Description  : 개발 및 운영 환경을 구성하기 위한 스크립트          #
 # Author       : hipbone                                             #
 # Created Date : 2024-01-09                                          #
-# Last Update  : 2026-11-07                                          #
-# Version      : 2.4                                                 #
+# Last Update  : 2026-11-12                                          #
+# Version      : 2.5                                                 #
 ######################################################################
 
 ###################### 1. 변수 선언 - Start ##########################
@@ -50,6 +50,7 @@ print_help() {
   echo "    uv                          uv(Python 패키지·버전 관리자)를 설치"
   echo "    nvm                         nvm(Node 버전 관리자)과 LTS Node를 설치"
   echo "    claude                      Claude Code(Anthropic 공식 CLI)를 설치"
+  echo "    codex                       Codex CLI(OpenAI 코딩 에이전트)를 설치"
   echo "    herdr                       Herdr TUI(코딩 에이전트 멀티플렉서)를 설치하고 설정 연결"
 }
 
@@ -592,6 +593,54 @@ set_claude() {
   echo "PATH는 새 셸을 열거나 'exec zsh' 후 적용됩니다."
 }
 
+## Codex CLI(OpenAI 코딩 에이전트) 설치
+## 공식 독립 설치 스크립트(chatgpt.com/codex/install.sh)를 사용한다.
+## - 실행 파일은 ~/.local/bin/codex 에 설치된다 (~/.codex/packages/standalone/ 로의 심볼릭 링크).
+## - 설치 스크립트는 ~/.local/bin 이 PATH에 없거나, npm/brew로 설치된 codex가 이미 있으면
+##   ~/.zshrc 에 PATH 블록을 직접 추가한다. zshrc는 git으로 관리되므로
+##   1) 실행 전에 ~/.local/bin 을 PATH에 넣고, 2) 다른 경로의 codex가 있으면 설치를 중단한다.
+## - CODEX_NON_INTERACTIVE=1 로 "지금 실행할까요?" / "기존 codex 삭제?" 프롬프트를 건너뛴다.
+## - npm 전역 설치는 쓰지 않는다 (Claude Code와 같은 이유: Node 런타임 의존을 강요하지 않음).
+## - 다시 실행하면 최신 버전으로 갱신되므로 멱등하다.
+set_codex() {
+  echo "Codex CLI를 설치합니다..."
+
+  export PATH="${HOME}/.local/bin:${PATH}"
+
+  local existing_codex
+  existing_codex="$(command -v codex 2>/dev/null)"
+  if [ -n "${existing_codex}" ] && [ "${existing_codex}" != "${HOME}/.local/bin/codex" ]; then
+    echo "다른 방식으로 설치된 codex가 있습니다: ${existing_codex}"
+    echo "설치 스크립트가 ~/.zshrc 를 수정하게 되므로 먼저 제거한 뒤 다시 실행하세요."
+    echo "  npm uninstall -g @openai/codex    (npm 설치)"
+    echo "  brew uninstall --cask codex       (brew 설치)"
+    exit 1
+  fi
+
+  if [ -n "${existing_codex}" ]; then
+    echo "Codex CLI가 이미 설치되어 있습니다: $(codex --version 2>/dev/null)"
+    echo "최신 버전으로 갱신합니다."
+  fi
+
+  curl -fsSL https://chatgpt.com/codex/install.sh | env CODEX_NON_INTERACTIVE=1 sh || exit 1
+
+  if ! command -v codex &> /dev/null; then
+    echo "Codex CLI 설치에 실패했습니다."
+    exit 1
+  fi
+
+  # zsh 자동완성 (zshrc_* 가 fpath+=~/.zfunc 로 등록)
+  mkdir -p "${HOME}/.zfunc"
+  codex completion zsh > "${HOME}/.zfunc/_codex"
+
+  echo ""
+  echo "Codex CLI 설치가 완료되었습니다: $(codex --version 2>/dev/null)"
+  echo "  codex               대화형 세션 시작 (첫 실행 시 'Sign in with ChatGPT' 선택)"
+  echo "  codex exec \"...\"    비대화형 실행"
+  echo "  bash setEnv.sh -e codex   최신 버전으로 갱신"
+  echo "PATH와 자동완성은 새 셸을 열거나 'exec zsh' 후 적용됩니다."
+}
+
 ## Herdr TUI(코딩 에이전트 멀티플렉서) 설치
 ## 공식 설치 스크립트를 사용한다.
 ## - 실행 파일 하나를 ~/.local/bin/herdr 에 넣는다. sudo 불필요, 셸 프로필 수정 없음
@@ -682,6 +731,10 @@ configure_environment() {
   claude)
     echo "Claude Code를 설치하는 중입니다..."
     is_linux && set_claude
+    ;;
+  codex)
+    echo "Codex CLI를 설치하는 중입니다..."
+    is_linux && set_codex
     ;;
   herdr)
     echo "Herdr TUI를 설치하는 중입니다..."
